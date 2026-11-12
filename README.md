@@ -21,22 +21,30 @@ Every X button, the "Buy" button and the "Copy CA" button pick these up automati
 
 ## Meal Meter (live on-chain donation counter)
 
-The section under the hero reads the Solana chain directly from the visitor's browser (no backend).
-It sums the SOL donated, values it at the live SOL price (Jupiter, CoinGecko as fallback) and converts it with
-Feeding America's figure of **$1 = 20 meals**.
+The section under the hero reads the coin's pump.fun fee accounts straight from the Solana chain, in the visitor's
+browser (no backend). Everything is derived from `CONFIG.CA`:
 
-Set it up in `CONFIG.DONATION` in `main.js`:
+1. **Fee-sharing config** (`sharing-config` PDA of the mint, pump.fun fees program): who receives the creator fee, and
+   whether the split is locked (`admin_revoked`).
+2. **Creator vault** (bonding curve, plus the PumpSwap WSOL vault after graduation): fees that have built up but
+   haven't been claimed yet. These count too.
+3. **Donation account** (`DonationFeePda`, the shareholder): what's on its way, plus `total_donated` (already delivered).
+   Its totals only count if the account belongs to this mint (`base_mint == CA`), so a shared account can't inflate
+   the number.
+
+Total SOL × live SOL price (Jupiter, CoinGecko fallback) × **20 meals per $1** (Feeding America) = the counter.
+
+`CONFIG.DONATION` in `main.js`:
 
 | Key | What it does |
 | --- | --- |
-| `WALLET` | The Solana wallet the creator rewards flow through. Empty = "goes live at launch". |
-| `MODE` | `'received'` counts all SOL arriving in `WALLET`. `'sent'` counts only SOL that `WALLET` sends to `DONATE_TO`. |
-| `DONATE_TO` | The donate.gg deposit address (only used with `MODE: 'sent'`). |
 | `RPC` | A CORS-enabled Solana RPC. The default (PublicNode) is free; for heavy traffic use your own free Helius URL. |
-| `OFFSET_USD` | Donations made outside the tracked wallet, in USD. They're added to the total. |
 | `MEALS_PER_USD` | `20`, per feedingamerica.org. |
+| `OFFSET_USD` | Donations made outside pump.fun, in USD. They're added to the total. |
+| `REFRESH_MS` | How often the chain is re-read (default 20s). |
 
-Preview with any wallet locally: `http://localhost:5173/?wallet=<ADDRESS>` (the `?wallet=` override only works on localhost).
+Before the mint exists on-chain the meter shows "Goes live at launch" and switches to live by itself once trading starts.
+Preview any coin locally: `http://localhost:5173/?ca=<MINT>` (the `?ca=` override only works on localhost).
 
 ## Run locally
 

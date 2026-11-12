@@ -6,22 +6,18 @@
 
   /* ======= LAUNCH CONFIG: fill these in when ready ======= */
   const CONFIG = {
-    CA: '',       // Solana contract address. Empty = "COMING SOON"
+    CA: 'FTu55MyigXns96jz4nTCDDiTCjYJjyrHSceCgG9Upump', // $FOODCOIN contract address. Empty = "COMING SOON"
     X_URL: 'https://x.com/foodcoinpf', // official X account
-    BUY_URL: '',  // e.g. pump.fun / Raydium / Jupiter link. Empty = "soon" toast
+    BUY_URL: 'https://pump.fun/coin/FTu55MyigXns96jz4nTCDDiTCjYJjyrHSceCgG9Upump', // empty = "soon" toast
 
-    /* Meal Meter: reads donations straight from the Solana chain */
+    /* Meal Meter: reads the coin's pump.fun fee accounts straight from the Solana chain.
+       Everything is derived from CA: creator vault (unclaimed fees), the donation
+       account the fee-sharing config pays into, and that account's total_donated. */
     DONATION: {
-      WALLET: '',        // the wallet the creator rewards flow through (empty = "goes live at launch")
-      MODE: 'received',  // 'received': count all SOL arriving in WALLET
-                         // 'sent':     count SOL that WALLET sends to DONATE_TO
-      DONATE_TO: '',     // donate.gg deposit address (only for MODE 'sent')
       RPC: 'https://solana-rpc.publicnode.com', // any CORS-enabled Solana RPC (e.g. a free Helius URL)
       MEALS_PER_USD: 20, // Feeding America: every $1 provides 20 meals
-      OFFSET_USD: 0,     // donations made outside the tracked wallet, in USD
-      REFRESH_MS: 30000, // how often to check the chain for new donations
-      MAX_HISTORY: 1000, // max transactions scanned on a visitor's first load
-      MIN_SOL: 0.001     // ignore dust transfers below this amount
+      OFFSET_USD: 0,     // donations made outside pump.fun, in USD (added to the total)
+      REFRESH_MS: 20000  // how often to re-read the chain
     }
   };
 
@@ -92,11 +88,18 @@
         const tag = a.querySelector('i'); if (tag) tag.remove();
       } else a.addEventListener('click', e => { e.preventDefault(); toast('Launching soon on Solana.'); });
     });
-    $$('[data-copy-ca]').forEach(b => b.addEventListener('click', async () => {
+    const copyCA = async () => {
       if (!CONFIG.CA) return toast('CA drops soon. Watch our X.');
       try { await navigator.clipboard.writeText(CONFIG.CA); toast('Contract address copied'); }
       catch { toast(CONFIG.CA); }
-    }));
+    };
+    $$('[data-copy-ca], [data-ca-pill]').forEach(b => b.addEventListener('click', copyCA));
+    const pillText = $('[data-ca-pill-text]');
+    if (CONFIG.CA && pillText) {
+      pillText.textContent = CONFIG.CA.slice(0, 4) + '…' + CONFIG.CA.slice(-4);
+      pillText.classList.add('is-ca');
+      $('[data-ca-pill]').setAttribute('title', 'Copy CA: ' + CONFIG.CA);
+    }
     $$('[data-year]').forEach(el => (el.textContent = new Date().getFullYear()));
   }
 
@@ -353,13 +356,61 @@
     return { set };
   }
 
+  /* ---- tiny Solana toolkit (no dependencies): base58, PDAs, account reads ---- */
+  const SOL = (() => {
+    const A = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+    const dec = s => {
+      let n = 0n;
+      for (const c of s) { const i = A.indexOf(c); if (i < 0) throw new Error('bad base58'); n = n * 58n + BigInt(i); }
+      const out = [];
+      while (n > 0n) { out.push(Number(n & 255n)); n >>= 8n; }
+      for (const c of s) { if (c === '1') out.push(0); else break; }
+      return Uint8Array.from(out.reverse());
+    };
+    const enc = b => {
+      let n = 0n;
+      for (const x of b) n = n * 256n + BigInt(x);
+      let s = '';
+      while (n > 0n) { s = A[Number(n % 58n)] + s; n /= 58n; }
+      for (const x of b) { if (x === 0) s = '1' + s; else break; }
+      return s;
+    };
+    // ed25519: is this 32-byte string a valid curve point? (PDAs must NOT be)
+    const P = 2n ** 255n - 19n;
+    const md = a => { a %= P; return a < 0n ? a + P : a; };
+    const pw = (b, e) => { let r = 1n; b = md(b); while (e > 0n) { if (e & 1n) r = r * b % P; b = b * b % P; e >>= 1n; } return r; };
+    const D = md(-121665n * pw(121666n, P - 2n));
+    const onCurve = b => {
+      let y = 0n;
+      for (let i = 31; i >= 0; i--) y = (y << 8n) | BigInt(i === 31 ? b[i] & 0x7f : b[i]);
+      if (y >= P) return false;
+      const y2 = y * y % P, x2 = md(y2 - 1n) * pw(md(D * y2 + 1n), P - 2n) % P;
+      if (x2 === 0n) return (b[31] >> 7) === 0;
+      return pw(x2, (P - 1n) / 2n) === 1n;
+    };
+    const te = new TextEncoder();
+    const cat = parts => { const len = parts.reduce((s, p) => s + p.length, 0), o = new Uint8Array(len); let i = 0; for (const p of parts) { o.set(p, i); i += p.length; } return o; };
+    async function pda(seeds, program) {
+      const prog = dec(program), marker = te.encode('ProgramDerivedAddress');
+      const raw = seeds.map(s => (typeof s === 'string' ? te.encode(s) : s));
+      for (let bump = 255; bump >= 0; bump--) {
+        const h = new Uint8Array(await crypto.subtle.digest('SHA-256', cat([...raw, Uint8Array.of(bump), prog, marker])));
+        if (!onCurve(h)) return enc(h);
+      }
+      throw new Error('no PDA');
+    }
+    return { dec, enc, pda };
+  })();
+
   function initMeter() {
     const D = CONFIG.DONATION;
     const odo = makeOdometer($('[data-odo]'));
     odo.set(0);
     const els = {
       live: $('[data-m-live]'), status: $('[data-m-status]'), usd: $('[data-m-usd]'), sol: $('[data-m-sol]'),
-      count: $('[data-m-count]'), feed: $('[data-feed]'), wallet: $('[data-m-wallet]'), updated: $('[data-m-updated]')
+      sent: $('[data-m-sent]'), ca: $('[data-m-ca]'), updated: $('[data-m-updated]'), lock: $('[data-m-lock]'),
+      tVault: $('[data-t-vault]'), tVaultLink: $('[data-t-vault-link]'), tPending: $('[data-t-pending]'),
+      tPendingLink: $('[data-t-pending-link]'), tSent: $('[data-t-sent]'), tCrank: $('[data-t-crank]')
     };
 
     gsap.from('.meter-card', {
@@ -367,110 +418,124 @@
       scrollTrigger: { trigger: '.meter', start: 'top 90%' }
     });
 
-    // a wallet can be previewed locally via ?wallet=ADDRESS (never on the live domain)
+    // any coin can be previewed locally via ?ca=MINT (never on the live domain)
     const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
-    const wallet = D.WALLET || (isLocal && new URLSearchParams(location.search).get('wallet')) || '';
-
-    if (!wallet) {
+    const ca = (isLocal && new URLSearchParams(location.search).get('ca')) || CONFIG.CA;
+    if (!ca) {
       els.live.classList.add('is-idle');
       els.status.textContent = 'Goes live at launch';
-      if (D.OFFSET_USD > 0) {
-        ScrollTrigger.create({ trigger: '.meter', start: 'top 75%', once: true, onEnter: () => {
-          const o = { v: 0 }, meals = Math.floor(D.OFFSET_USD * D.MEALS_PER_USD);
-          gsap.to(o, { v: meals, duration: 2.6, ease: 'power3.out', onUpdate: () => odo.set(o.v) });
-          els.usd.textContent = '$' + D.OFFSET_USD.toLocaleString('en-US', { maximumFractionDigits: 0 });
-        } });
-      }
+      $$('.t-link[href="#"]').forEach(a => a.classList.add('off'));
       return;
     }
 
+    const PROG = {
+      pump: '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P',
+      amm: 'pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA',
+      fees: 'pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ',
+      token: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+      ata: 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
+      wsol: 'So11111111111111111111111111111111111111112'
+    };
+    const DISC_SHARING = 'd84a0900388c5d4b', DISC_DONATION = 'f6c56009c11e5d73';
     const short = a => a.slice(0, 4) + '…' + a.slice(-4);
-    els.wallet.textContent = short(wallet);
-    els.wallet.href = 'https://solscan.io/account/' + wallet;
-
-    const cacheKey = `foodcoin:meter:v2:${wallet}:${D.MODE}:${D.DONATE_TO}:${D.MIN_SOL}`;
-    let cache = { last: null, items: [] }; // items: { s: signature, t: blockTime, a: SOL }
-    try { const c = JSON.parse(localStorage.getItem(cacheKey)); if (c && Array.isArray(c.items)) cache = c; } catch {}
-    const saveCache = () => { try { localStorage.setItem(cacheKey, JSON.stringify(cache)); } catch {} };
-
-    const state = { price: 0, shownMeals: 0, started: false, lastSync: 0, seen: new Set(cache.items.map(i => i.s)) };
+    const solscan = a => 'https://solscan.io/account/' + a;
+    els.ca.textContent = short(ca);
+    els.ca.href = 'https://solscan.io/token/' + ca;
 
     async function rpc(method, params) {
-      const r = await fetch(D.RPC, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params })
-      });
+      const r = await fetch(D.RPC, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) });
       const j = await r.json();
       if (j.error) throw new Error(j.error.message || 'RPC error');
       return j.result;
     }
+    const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+    async function accounts(keys) {
+      const res = await rpc('getMultipleAccounts', [keys, { encoding: 'base64', commitment: 'confirmed' }]);
+      return res.value.map(v => (v ? { lamports: v.lamports, data: b64(v.data[0]) } : null));
+    }
+    const hex8 = d => [...d.subarray(0, 8)].map(x => x.toString(16).padStart(2, '0')).join('');
+    const u64 = (d, o) => Number(new DataView(d.buffer, d.byteOffset).getBigUint64(o, true));
+    const i64 = (d, o) => Number(new DataView(d.buffer, d.byteOffset).getBigInt64(o, true));
+    const key = (d, o) => SOL.enc(d.subarray(o, o + 32));
+    const tokenAmount = acc => (acc && acc.data.length >= 72 ? u64(acc.data, 64) : 0);
+
+    const rentCache = {};
+    async function rent(len) {
+      if (!(len in rentCache)) rentCache[len] = await rpc('getMinimumBalanceForRentExemption', [len]);
+      return rentCache[len];
+    }
 
     async function solPrice() {
       try {
-        const r = await fetch('https://lite-api.jup.ag/price/v3?ids=So11111111111111111111111111111111111111112');
-        const j = await r.json();
-        const p = j['So11111111111111111111111111111111111111112']?.usdPrice;
+        const r = await fetch('https://lite-api.jup.ag/price/v3?ids=' + PROG.wsol);
+        const p = (await r.json())[PROG.wsol]?.usdPrice;
         if (p) return p;
       } catch {}
       const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
       return (await r.json()).solana.usd;
     }
 
-    async function newSignatures() {
-      const out = [];
-      let before;
-      for (let page = 0; page < 20; page++) {
-        const opts = { limit: 100, commitment: 'confirmed' };
-        if (before) opts.before = before;
-        if (cache.last) opts.until = cache.last;
-        const res = await rpc('getSignaturesForAddress', [wallet, opts]);
-        out.push(...res);
-        if (res.length < 100 || out.length >= D.MAX_HISTORY) break;
-        before = res[res.length - 1].signature;
-      }
-      return out; // newest first
+    // addresses derived once from the CA
+    let addr = null;
+    async function derive() {
+      const mint = SOL.dec(ca);
+      const sharing = await SOL.pda(['sharing-config', mint], PROG.fees);
+      const sharingB = SOL.dec(sharing);
+      const vault = await SOL.pda(['creator-vault', sharingB], PROG.pump);
+      const ammAuth = await SOL.pda(['creator_vault', sharingB], PROG.amm);
+      const ammVault = await SOL.pda([SOL.dec(ammAuth), SOL.dec(PROG.token), SOL.dec(PROG.wsol)], PROG.ata);
+      return { sharing, vault, ammVault };
     }
 
-    function amountOf(tx) {
-      if (!tx || !tx.meta || tx.meta.err) return 0;
-      const msgKeys = tx.transaction.message.accountKeys.map(k => (typeof k === 'string' ? k : k.pubkey));
-      const la = tx.meta.loadedAddresses || {};
-      const keys = [...msgKeys, ...(la.writable || []), ...(la.readonly || [])];
-      const pre = tx.meta.preBalances, post = tx.meta.postBalances;
-      const wi = keys.indexOf(wallet);
-      if (wi < 0) return 0;
-      if (D.MODE === 'sent') {
-        const ti = keys.indexOf(D.DONATE_TO);
-        if (ti < 0) return 0;
-        const d = post[ti] - pre[ti];
-        return d > 0 && post[wi] < pre[wi] ? d / 1e9 : 0;
-      }
-      const d = post[wi] - pre[wi];
-      return d > 0 ? d / 1e9 : 0;
-    }
+    const state = { price: 0, totalSol: 0, shownMeals: 0, started: false, lastSync: 0, donationAta: {} };
 
-    async function fetchTxs(sigs) {
-      const found = [];
-      let i = 0;
-      const worker = async () => {
-        while (i < sigs.length) {
-          const s = sigs[i++];
-          try {
-            const tx = await rpc('getTransaction', [s.signature, { maxSupportedTransactionVersion: 0, commitment: 'confirmed' }]);
-            const a = amountOf(tx);
-            if (a >= D.MIN_SOL) found.push({ s: s.signature, t: s.blockTime || tx.blockTime || 0, a });
-          } catch { await new Promise(r => setTimeout(r, 600)); }
+    async function read() {
+      if (!addr) {
+        addr = await derive();
+        els.tVaultLink.href = solscan(addr.vault);
+      }
+      const [sharingAcc, vaultAcc, ammAcc] = await accounts([addr.sharing, addr.vault, addr.ammVault]);
+      const out = { live: !!sharingAcc, vault: 0, pending: 0, sent: 0, locked: false, donationBps: 0, donation: null, lastCrank: 0 };
+      if (!sharingAcc || hex8(sharingAcc.data) !== DISC_SHARING) return out;
+
+      // fee-sharing config: who gets the creator fee, and is the split locked?
+      const d = sharingAcc.data;
+      out.locked = d[75] === 1;
+      const n = new DataView(d.buffer, d.byteOffset).getUint32(76, true);
+      const holders = [];
+      for (let i = 0, o = 80; i < n; i++, o += 34) holders.push({ key: key(d, o), bps: new DataView(d.buffer, d.byteOffset).getUint16(o + 32, true) });
+
+      // unclaimed fees still sitting in the creator vaults (bonding curve + PumpSwap after graduation)
+      const vaultSol = Math.max(0, ((vaultAcc ? vaultAcc.lamports : 0) - (vaultAcc ? await rent(0) : 0))) / 1e9;
+      const ammSol = tokenAmount(ammAcc) / 1e9;
+
+      // donation accounts among the shareholders
+      for (const h of holders) {
+        if (!state.donationAta[h.key]) state.donationAta[h.key] = await SOL.pda([SOL.dec(h.key), SOL.dec(PROG.token), SOL.dec(PROG.wsol)], PROG.ata);
+      }
+      const holderAccs = holders.length ? await accounts(holders.flatMap(h => [h.key, state.donationAta[h.key]])) : [];
+      for (let i = 0; i < holders.length; i++) {
+        const acc = holderAccs[i * 2], ata = holderAccs[i * 2 + 1];
+        if (!acc || hex8(acc.data) !== DISC_DONATION) continue;
+        out.donationBps += holders[i].bps;
+        out.donation = holders[i].key;
+        // only count the donation account's own totals if it belongs to this coin (not shared with another mint)
+        if (key(acc.data, 42) === ca) {
+          out.pending += Math.max(0, acc.lamports - await rent(acc.data.length)) / 1e9 + tokenAmount(ata) / 1e9;
+          out.sent += u64(acc.data, 138) / 1e9;
+          out.lastCrank = Math.max(out.lastCrank, i64(acc.data, 146));
         }
-      };
-      await Promise.all(Array.from({ length: 4 }, worker));
-      return found;
+      }
+      out.vault = (vaultSol + ammSol) * (out.donationBps / 10000);
+      return out;
     }
 
+    const fmtSol = v => v.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + ' SOL';
     const fmtUsd = v => '$' + v.toLocaleString('en-US', { maximumFractionDigits: v < 1000 ? 2 : 0 });
     const ago = t => {
       const s = Math.max(1, Math.floor(Date.now() / 1000 - t));
-      if (s < 60) return s + 's ago'; if (s < 3600) return Math.floor(s / 60) + 'm ago';
-      if (s < 86400) return Math.floor(s / 3600) + 'h ago'; return Math.floor(s / 86400) + 'd ago';
+      if (s < 3600) return Math.max(1, Math.floor(s / 60)) + 'm ago'; if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+      return Math.floor(s / 86400) + 'd ago';
     };
 
     function pop(text) {
@@ -483,35 +548,16 @@
       });
     }
 
-    function renderFeed(newOnes) {
-      const items = [...cache.items].sort((a, b) => b.t - a.t).slice(0, 5);
-      if (!items.length) return;
-      els.feed.innerHTML = items.map(it => `
-        <li data-sig="${it.s}">
-          <span class="f-amt">+${it.a.toFixed(it.a < 1 ? 3 : 2)} SOL</span>
-          <span class="f-meals">≈ ${Math.floor(it.a * state.price * D.MEALS_PER_USD).toLocaleString('en-US')} meals</span>
-          <span class="f-time">${it.t ? ago(it.t) : ''}</span>
-          <a href="https://solscan.io/tx/${it.s}" target="_blank" rel="noopener">View ↗</a>
-        </li>`).join('');
-      if (newOnes && newOnes.size) {
-        $$('li', els.feed).filter(li => newOnes.has(li.dataset.sig))
-          .forEach((li, i) => gsap.from(li, { x: -40, opacity: 0, duration: 0.8, delay: i * 0.08, ease: 'power3.out' }));
-      }
-    }
-
-    function render(newOnes) {
-      const sol = cache.items.reduce((s, i) => s + i.a, 0);
-      const usd = sol * state.price + D.OFFSET_USD;
+    function render() {
+      const usd = state.totalSol * state.price + D.OFFSET_USD;
       const meals = Math.floor(usd * D.MEALS_PER_USD);
-      els.sol.textContent = sol.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      els.sol.textContent = state.totalSol.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
       els.usd.textContent = fmtUsd(usd);
-      els.count.textContent = cache.items.length.toLocaleString('en-US');
-      renderFeed(newOnes);
       if (!state.started) return;
       if (meals !== state.shownMeals) {
         const from = state.shownMeals, o = { v: from };
         gsap.to(o, { v: meals, duration: from === 0 ? 2.8 : 1.8, ease: 'power3.out', overwrite: true, onUpdate: () => odo.set(o.v) });
-        if (from > 0 && newOnes && newOnes.size && meals > from) pop(`+${(meals - from).toLocaleString('en-US')} meals`);
+        if (from > 0 && meals > from) pop(`+${(meals - from).toLocaleString('en-US')} meals`);
         state.shownMeals = meals;
       }
     }
@@ -521,18 +567,32 @@
       if (busy || document.hidden) return;
       busy = true;
       try {
-        const [price, sigs] = await Promise.all([solPrice(), newSignatures()]);
+        const [price, r] = await Promise.all([solPrice(), read()]);
         state.price = price;
-        const fresh = sigs.filter(s => !s.err && !state.seen.has(s.signature));
-        const found = fresh.length ? await fetchTxs(fresh) : [];
-        if (sigs.length) cache.last = sigs[0].signature;
-        found.forEach(f => state.seen.add(f.s));
-        cache.items.push(...found);
-        saveCache();
         state.lastSync = Date.now();
-        els.live.classList.remove('is-error', 'is-idle');
+        if (!r.live) {
+          els.live.classList.add('is-idle');
+          els.status.textContent = 'Goes live at launch';
+          els.tPendingLink.classList.add('off');
+          state.totalSol = 0;
+          render();
+          return;
+        }
+        state.totalSol = r.vault + r.pending + r.sent;
+        els.live.classList.remove('is-idle', 'is-error');
         els.status.textContent = 'Live on-chain';
-        render(new Set(found.map(f => f.s)));
+        els.tVault.textContent = fmtSol(r.vault);
+        els.tPending.textContent = fmtSol(r.pending);
+        els.tSent.textContent = fmtSol(r.sent);
+        els.sent.textContent = fmtSol(r.sent);
+        els.tCrank.textContent = r.lastCrank ? 'Last delivery ' + ago(r.lastCrank) : 'Waiting for the first delivery';
+        if (r.donation) { els.tPendingLink.href = solscan(r.donation); els.tPendingLink.classList.remove('off'); }
+        if (r.locked) {
+          els.lock.hidden = false;
+          els.lock.textContent = `🔒 ${(r.donationBps / 100).toFixed(0)}% of creator fees → charity · locked forever`;
+          els.lock.title = 'The fee split is locked on-chain (admin revoked) and can never be changed.';
+        }
+        render();
       } catch (e) {
         els.live.classList.add('is-error');
         els.status.textContent = 'Reconnecting';
@@ -545,11 +605,7 @@
       els.updated.textContent = `Updated ${s < 2 ? 'just now' : s + 's ago'} · checks every ${Math.round(D.REFRESH_MS / 1000)}s`;
     }, 1000);
 
-    ScrollTrigger.create({
-      trigger: '.meter', start: 'top 75%', once: true,
-      onEnter: () => { state.started = true; render(); }
-    });
-    if (cache.items.length) render();
+    ScrollTrigger.create({ trigger: '.meter', start: 'top 75%', once: true, onEnter: () => { state.started = true; render(); } });
     sync();
     setInterval(sync, D.REFRESH_MS);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) sync(); });

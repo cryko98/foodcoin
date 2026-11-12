@@ -57,7 +57,7 @@
       <a href="#advent" data-scroll>Roadmap</a>
     </nav>
     <div class="nav-actions">
-      <span class="pill"><span class="dot"></span>CA soon</span>
+      <button type="button" class="pill" data-ca-pill aria-label="Copy contract address"><span class="dot"></span><span data-ca-pill-text>CA soon</span></button>
       <a href="#" class="x-btn magnetic" data-x-link aria-label="Foodcoin on X">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
       </a>
@@ -125,22 +125,40 @@
         </div>
 
         <dl class="meter-stats">
-          <div><dt>Donated</dt><dd data-m-usd>$0</dd></div>
-          <div><dt>In SOL</dt><dd data-m-sol>0.00</dd></div>
-          <div><dt>Donations</dt><dd data-m-count>0</dd></div>
+          <div><dt>Raised for charity</dt><dd data-m-usd>$0</dd></div>
+          <div><dt>In SOL</dt><dd data-m-sol>0.000</dd></div>
+          <div><dt>Delivered so far</dt><dd data-m-sent>0.000 SOL</dd></div>
           <div class="rate"><dt>The math</dt><dd>$1 = 20 meals</dd></div>
         </dl>
 
         <div class="meter-bottom">
           <div class="feed">
-            <p class="feed-title">Latest donations</p>
-            <ul data-feed>
-              <li class="feed-empty">No donations yet. The first plate is coming.</li>
-            </ul>
+            <p class="feed-title">Follow the money, live</p>
+            <ol class="trail" data-trail>
+              <li>
+                <span class="t-step">1</span>
+                <div class="t-body"><b>Creator vault</b><small>Fees from every trade land here, even before anyone claims them</small></div>
+                <span class="t-amt" data-t-vault>0.000 SOL</span>
+                <a class="t-link" data-t-vault-link href="#" target="_blank" rel="noopener">View ↗</a>
+              </li>
+              <li>
+                <span class="t-step">2</span>
+                <div class="t-body"><b>Donation account</b><small>pump.fun's built-in donation account, on its way to the charity</small></div>
+                <span class="t-amt" data-t-pending>0.000 SOL</span>
+                <a class="t-link" data-t-pending-link href="#" target="_blank" rel="noopener">View ↗</a>
+              </li>
+              <li>
+                <span class="t-step">3</span>
+                <div class="t-body"><b>Delivered to charity</b><small data-t-crank>Waiting for the first delivery</small></div>
+                <span class="t-amt" data-t-sent>0.000 SOL</span>
+                <a class="t-link" href="https://www.donate.gg/charities/feeding-america" target="_blank" rel="noopener">donate.gg ↗</a>
+              </li>
+            </ol>
+            <p class="lock" data-m-lock hidden></p>
           </div>
           <div class="meter-meta">
-            <p><span>Tracked wallet</span><a data-m-wallet href="#" target="_blank" rel="noopener">Goes live at launch</a></p>
-            <p><span>Status</span><b data-m-updated>Counter starts when the CA drops</b></p>
+            <p><span>Contract</span><a data-m-ca href="#" target="_blank" rel="noopener">Goes live at launch</a></p>
+            <p><span>Status</span><b data-m-updated>Counter starts at launch</b></p>
             <p><span>Source</span><a href="https://www.feedingamerica.org/" target="_blank" rel="noopener">Feeding America: every $1 provides 20 meals ↗</a></p>
           </div>
         </div>
