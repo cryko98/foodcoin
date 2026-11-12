@@ -358,19 +358,21 @@ h1 em::after, h2 em::after, .m-outro em::after, .advent-after em::after {
 }
 .stat-index { font-family: var(--f-mono); font-size: 12px; letter-spacing: .2em; color: var(--muted); }
 .stat-index b { color: var(--fg); font-weight: 700; }
+/* plate and text share the exact same box, so their centers always line up */
+.stats { --stat-top: 8vh; }
 .stat-plate-wrap {
-  position: absolute; left: 50%; top: 54%; translate: -50% -50%;
-  display: flex; align-items: center; gap: clamp(14px, 3vw, 46px);
+  position: absolute; inset: var(--stat-top) 0 0 0;
+  display: flex; align-items: center; justify-content: center; gap: clamp(12px, 3vw, 46px);
 }
-.stat-plate { width: min(64vh, 76vw); height: auto; overflow: visible; }
+.stat-plate { flex: 0 0 auto; width: min(64vh, 68vw); height: auto; max-width: none; overflow: visible; }
 .sp-base { fill: color-mix(in srgb, var(--fg) 9%, transparent); stroke: var(--line); stroke-width: 2; }
 .sp-well { fill: none; stroke: var(--line); stroke-width: 2; stroke-dasharray: 3 10; stroke-linecap: round; }
 .sp-track { fill: none; stroke: color-mix(in srgb, var(--fg) 14%, transparent); stroke-width: 6; }
 .stat-ring { fill: none; stroke: var(--fg); stroke-width: 6; stroke-linecap: round; }
-.cutlery { width: clamp(16px, 2.2vw, 30px); height: auto; fill: color-mix(in srgb, var(--fg) 30%, transparent); }
+.cutlery { flex: 0 0 auto; width: clamp(14px, 2.2vw, 30px); height: auto; max-width: none; fill: color-mix(in srgb, var(--fg) 30%, transparent); }
 .stat-items { position: absolute; inset: 0; z-index: 2; }
 .stat {
-  position: absolute; inset: 0; padding: 8vh var(--pad) 0;
+  position: absolute; inset: var(--stat-top) 0 0 0; padding: 0 var(--pad);
   display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
   visibility: hidden;
 }
@@ -483,16 +485,16 @@ h1 em::after, h2 em::after, .m-outro em::after, .advent-after em::after {
 .week { position: relative; border-top: 2px solid var(--line); padding-top: 30px; }
 .week::before { content: ""; position: absolute; top: -2px; left: 0; height: 2px; width: 100%; background: var(--fg); transform: scaleX(var(--lit, 0)); transform-origin: left; transition: transform 1.2s var(--ease-out); }
 .week.lit { --lit: 1; }
-.candle-css { position: relative; height: 190px; width: 40px; margin-bottom: 28px; }
+.candle-css { --ch: var(--h, 120px); position: relative; height: 190px; width: 40px; margin-bottom: 28px; }
 .candle-css .body {
-  position: absolute; bottom: 0; left: 0; width: 40px; height: var(--h, 120px);
+  position: absolute; bottom: 0; left: 0; width: 40px; height: var(--ch);
   border-radius: 8px 8px 4px 4px;
   background: linear-gradient(90deg, #B81C15, var(--red) 40%, #F0544A 55%, #B81C15);
 }
 .candle-css .body.alt { background: linear-gradient(90deg, #E8D4A4, var(--cream) 45%, #fffaf0 55%, #E8D4A4); box-shadow: inset 0 0 0 2px rgba(228,39,33,.25); }
 .candle-css .body::before { content: ""; position: absolute; top: -3px; left: 0; right: 0; height: 8px; border-radius: 50%; background: rgba(255,255,255,.25); }
-.candle-css .wick { position: absolute; left: 50%; bottom: calc(var(--h, 120px) - 2px); width: 2px; height: 12px; translate: -50% 0; background: #3a120c; border-radius: 2px; }
-.flame-wrap { position: absolute; left: 50%; bottom: calc(var(--h, 120px) + 6px); width: 18px; height: 34px; translate: -50% 0; transform-origin: 50% 100%; transform: scale(0); }
+.candle-css .wick { position: absolute; left: 50%; bottom: calc(var(--ch) - 2px); width: 2px; height: 12px; translate: -50% 0; background: #3a120c; border-radius: 2px; }
+.flame-wrap { position: absolute; left: 50%; bottom: calc(var(--ch) + 6px); width: 18px; height: 34px; translate: -50% 0; transform-origin: 50% 100%; transform: scale(0); }
 .flame-wrap::before { content: ""; position: absolute; left: 50%; top: 50%; width: 140px; height: 140px; translate: -50% -50%; border-radius: 50%; background: radial-gradient(circle, rgba(255,170,60,.4), transparent 65%); }
 .flame {
   position: absolute; inset: 0; border-radius: 50% 50% 45% 45% / 62% 62% 38% 38%;
@@ -575,6 +577,32 @@ h1 em::after, h2 em::after, .m-outro em::after, .advent-after em::after {
   .advent-grid { grid-template-columns: 1fr; }
   .candle-css { height: 170px; }
   .meter { padding-top: 2vh; }
+
+  /* tighter vertical rhythm on phones */
+  .manifesto { padding: 12vh var(--pad) 14vh; }
+  .token { padding: 12vh var(--pad) 10vh; }
+  .advent { padding: 10vh var(--pad) 10vh; }
+  .advent-grid { margin-top: 7vh; row-gap: 34px; }
+  .advent-after { margin-top: 9vh; }
+  .footer { padding-top: 10vh; }
+  .banner-stage { margin: 7vh auto 6vh; }
+
+  /* stats: bigger plate, no cutlery, text fits inside */
+  .stats { --stat-top: 6vh; }
+  .stats-head { top: 84px; }
+  .stats-head .label { font-size: 10px; letter-spacing: .14em; gap: 8px; }
+  .stats-head .label span::after { display: none; }
+  .cutlery { display: none; }
+  .stat-plate { width: 94vw; }
+  .stat-num { font-size: 11.5vw; }
+  .stat-cap { max-width: 70vw; font-size: .95rem; margin-top: 16px; }
+  .stat-src { max-width: 64vw; font-size: 9.5px; letter-spacing: .1em; line-height: 1.6; }
+
+  /* roadmap: candle beside the text */
+  .week { display: grid; grid-template-columns: 40px 1fr; column-gap: 22px; align-items: start; padding-top: 22px; }
+  .candle-css { --ch: calc(var(--h, 120px) * .68); grid-row: 1 / span 3; height: 150px; margin: 0; }
+  .week-n, .week h3, .week p { grid-column: 2; }
+  .week h3 { margin-top: 4px; }
   .meter-top .label span::after { display: none; }
   .live { padding: 7px 10px; font-size: 10px; letter-spacing: .12em; white-space: nowrap; }
   .meter-stats dd { font-size: 1.35rem; }
