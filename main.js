@@ -6,7 +6,7 @@
 
   /* ======= LAUNCH CONFIG: fill these in when ready ======= */
   const CONFIG = {
-    CA: 'FTu55MyigXns96jz4nTCDDiTCjYJjyrHSceCgG9Upump', // $FOODCOIN contract address. Empty = "COMING SOON"
+    CA: 'FTu55MyigXns96jz4nTCDDiTCjYJjyrHSceCgG9Upump', // $FOOD contract address. Empty = "COMING SOON"
     X_URL: 'https://x.com/foodcoinpf', // official X account
     BUY_URL: 'https://pump.fun/coin/FTu55MyigXns96jz4nTCDDiTCjYJjyrHSceCgG9Upump', // empty = "soon" toast
 

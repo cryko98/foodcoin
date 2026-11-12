@@ -1,4 +1,4 @@
-# FoodCoin — $FOODCOIN
+# FoodCoin — $FOOD
 
 A Solana memecoin with a dinner plan: creator rewards from trading go to feeding families who can't afford food over the holidays.
 
