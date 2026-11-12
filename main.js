@@ -8,7 +8,21 @@
   const CONFIG = {
     CA: '',       // Solana contract address. Empty = "COMING SOON"
     X_URL: '',    // e.g. 'https://x.com/yourhandle'. Empty = "soon" toast
-    BUY_URL: ''   // e.g. pump.fun / Raydium / Jupiter link. Empty = "soon" toast
+    BUY_URL: '',  // e.g. pump.fun / Raydium / Jupiter link. Empty = "soon" toast
+
+    /* Meal Meter: reads donations straight from the Solana chain */
+    DONATION: {
+      WALLET: '',        // the wallet the creator rewards flow through (empty = "goes live at launch")
+      MODE: 'received',  // 'received': count all SOL arriving in WALLET
+                         // 'sent':     count SOL that WALLET sends to DONATE_TO
+      DONATE_TO: '',     // donate.gg deposit address (only for MODE 'sent')
+      RPC: 'https://solana-rpc.publicnode.com', // any CORS-enabled Solana RPC (e.g. a free Helius URL)
+      MEALS_PER_USD: 20, // Feeding America: every $1 provides 20 meals
+      OFFSET_USD: 0,     // donations made outside the tracked wallet, in USD
+      REFRESH_MS: 30000, // how often to check the chain for new donations
+      MAX_HISTORY: 1000, // max transactions scanned on a visitor's first load
+      MIN_SOL: 0.001     // ignore dust transfers below this amount
+    }
   };
 
   const $ = (s, c = document) => c.querySelector(s);
@@ -29,6 +43,31 @@
     gsap.ticker.add(t => lenis.raf(t * 1000));
     gsap.ticker.lagSmoothing(0);
     lenis.stop();
+  }
+
+  /* ---------------- Theme (brand red ↔ cream) ---------------- */
+  const THEMES = {
+    cream: { bg: '#FFF1CA', fg: '#E42721' },
+    red: { bg: '#E42721', fg: '#FFF1CA' }
+  };
+  const theme = { ...THEMES.cream };
+  const rootStyle = document.documentElement.style;
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  let fgRGB = [228, 39, 33];
+  let currentTheme = 'cream';
+  const toRGB = c => c.startsWith('#')
+    ? [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16))
+    : c.match(/[\d.]+/g).slice(0, 3).map(Number);
+  function applyTheme() {
+    rootStyle.setProperty('--bg', theme.bg);
+    rootStyle.setProperty('--fg', theme.fg);
+    fgRGB = toRGB(theme.fg);
+  }
+  function setTheme(name) {
+    if (!THEMES[name] || name === currentTheme) return;
+    currentTheme = name;
+    gsap.to(theme, { ...THEMES[name], duration: 0.9, ease: 'power2.inOut', overwrite: true, onUpdate: applyTheme });
+    if (metaTheme) metaTheme.content = THEMES[name].bg;
   }
 
   /* ---------------- Toast ---------------- */
@@ -180,7 +219,7 @@
         if (f.x > w + 10) f.x = -10; else if (f.x < -10) f.x = w + 10;
         ctx.beginPath();
         ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(246,237,220,${f.o})`;
+        ctx.fillStyle = `rgba(${fgRGB[0]},${fgRGB[1]},${fgRGB[2]},${f.o * (currentTheme === 'red' ? 1 : 0.55)})`;
         ctx.fill();
       }
       requestAnimationFrame(tick);
@@ -275,6 +314,248 @@
   }
 
   /* =========================================================
+     MEAL METER — live on-chain donation counter
+     ========================================================= */
+  function makeOdometer(el) {
+    let n = 0, slots = [], commas = [];
+    function build(digits) {
+      el.innerHTML = ''; slots = []; commas = [];
+      for (let k = digits - 1; k >= 0; k--) {
+        const wrap = document.createElement('span');
+        wrap.className = 'odo-d';
+        const strip = document.createElement('span');
+        strip.className = 'odo-s';
+        strip.innerHTML = '01234567890'.split('').map(d => `<span>${d}</span>`).join('');
+        wrap.appendChild(strip); el.appendChild(wrap);
+        slots.push({ wrap, strip, k });
+        if (k > 0 && k % 3 === 0) {
+          const c = document.createElement('span');
+          c.className = 'odo-c'; c.textContent = ',';
+          el.appendChild(c); commas.push({ c, k });
+        }
+      }
+    }
+    function set(f) {
+      f = Math.max(0, f);
+      const len = String(Math.floor(f)).length;
+      if (len > n) { n = len; build(n); }
+      for (const s of slots) {
+        const p = 10 ** s.k;
+        const base = Math.floor(f / p) % 10;
+        const lower = f % p;
+        const frac = lower > p - 1 ? lower - (p - 1) : 0; // roll only when the digits below are carrying
+        s.strip.style.transform = `translateY(${-(base + frac)}em)`;
+        s.wrap.classList.toggle('lead', s.k >= len && s.k > 0);
+      }
+      for (const { c, k } of commas) c.classList.toggle('lead', k >= len);
+      el.setAttribute('aria-label', Math.round(f).toLocaleString('en-US') + ' meals provided');
+    }
+    return { set };
+  }
+
+  function initMeter() {
+    const D = CONFIG.DONATION;
+    const odo = makeOdometer($('[data-odo]'));
+    odo.set(0);
+    const els = {
+      live: $('[data-m-live]'), status: $('[data-m-status]'), usd: $('[data-m-usd]'), sol: $('[data-m-sol]'),
+      count: $('[data-m-count]'), feed: $('[data-feed]'), wallet: $('[data-m-wallet]'), updated: $('[data-m-updated]')
+    };
+
+    gsap.from('.meter-card', {
+      y: 120, scale: 0.92, rotate: -2, duration: 1.4, ease: 'expo.out',
+      scrollTrigger: { trigger: '.meter', start: 'top 90%' }
+    });
+
+    // a wallet can be previewed locally via ?wallet=ADDRESS (never on the live domain)
+    const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+    const wallet = D.WALLET || (isLocal && new URLSearchParams(location.search).get('wallet')) || '';
+
+    if (!wallet) {
+      els.live.classList.add('is-idle');
+      els.status.textContent = 'Goes live at launch';
+      if (D.OFFSET_USD > 0) {
+        ScrollTrigger.create({ trigger: '.meter', start: 'top 75%', once: true, onEnter: () => {
+          const o = { v: 0 }, meals = Math.floor(D.OFFSET_USD * D.MEALS_PER_USD);
+          gsap.to(o, { v: meals, duration: 2.6, ease: 'power3.out', onUpdate: () => odo.set(o.v) });
+          els.usd.textContent = '$' + D.OFFSET_USD.toLocaleString('en-US', { maximumFractionDigits: 0 });
+        } });
+      }
+      return;
+    }
+
+    const short = a => a.slice(0, 4) + '…' + a.slice(-4);
+    els.wallet.textContent = short(wallet);
+    els.wallet.href = 'https://solscan.io/account/' + wallet;
+
+    const cacheKey = `foodcoin:meter:v2:${wallet}:${D.MODE}:${D.DONATE_TO}:${D.MIN_SOL}`;
+    let cache = { last: null, items: [] }; // items: { s: signature, t: blockTime, a: SOL }
+    try { const c = JSON.parse(localStorage.getItem(cacheKey)); if (c && Array.isArray(c.items)) cache = c; } catch {}
+    const saveCache = () => { try { localStorage.setItem(cacheKey, JSON.stringify(cache)); } catch {} };
+
+    const state = { price: 0, shownMeals: 0, started: false, lastSync: 0, seen: new Set(cache.items.map(i => i.s)) };
+
+    async function rpc(method, params) {
+      const r = await fetch(D.RPC, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params })
+      });
+      const j = await r.json();
+      if (j.error) throw new Error(j.error.message || 'RPC error');
+      return j.result;
+    }
+
+    async function solPrice() {
+      try {
+        const r = await fetch('https://lite-api.jup.ag/price/v3?ids=So11111111111111111111111111111111111111112');
+        const j = await r.json();
+        const p = j['So11111111111111111111111111111111111111112']?.usdPrice;
+        if (p) return p;
+      } catch {}
+      const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
+      return (await r.json()).solana.usd;
+    }
+
+    async function newSignatures() {
+      const out = [];
+      let before;
+      for (let page = 0; page < 20; page++) {
+        const opts = { limit: 100, commitment: 'confirmed' };
+        if (before) opts.before = before;
+        if (cache.last) opts.until = cache.last;
+        const res = await rpc('getSignaturesForAddress', [wallet, opts]);
+        out.push(...res);
+        if (res.length < 100 || out.length >= D.MAX_HISTORY) break;
+        before = res[res.length - 1].signature;
+      }
+      return out; // newest first
+    }
+
+    function amountOf(tx) {
+      if (!tx || !tx.meta || tx.meta.err) return 0;
+      const msgKeys = tx.transaction.message.accountKeys.map(k => (typeof k === 'string' ? k : k.pubkey));
+      const la = tx.meta.loadedAddresses || {};
+      const keys = [...msgKeys, ...(la.writable || []), ...(la.readonly || [])];
+      const pre = tx.meta.preBalances, post = tx.meta.postBalances;
+      const wi = keys.indexOf(wallet);
+      if (wi < 0) return 0;
+      if (D.MODE === 'sent') {
+        const ti = keys.indexOf(D.DONATE_TO);
+        if (ti < 0) return 0;
+        const d = post[ti] - pre[ti];
+        return d > 0 && post[wi] < pre[wi] ? d / 1e9 : 0;
+      }
+      const d = post[wi] - pre[wi];
+      return d > 0 ? d / 1e9 : 0;
+    }
+
+    async function fetchTxs(sigs) {
+      const found = [];
+      let i = 0;
+      const worker = async () => {
+        while (i < sigs.length) {
+          const s = sigs[i++];
+          try {
+            const tx = await rpc('getTransaction', [s.signature, { maxSupportedTransactionVersion: 0, commitment: 'confirmed' }]);
+            const a = amountOf(tx);
+            if (a >= D.MIN_SOL) found.push({ s: s.signature, t: s.blockTime || tx.blockTime || 0, a });
+          } catch { await new Promise(r => setTimeout(r, 600)); }
+        }
+      };
+      await Promise.all(Array.from({ length: 4 }, worker));
+      return found;
+    }
+
+    const fmtUsd = v => '$' + v.toLocaleString('en-US', { maximumFractionDigits: v < 1000 ? 2 : 0 });
+    const ago = t => {
+      const s = Math.max(1, Math.floor(Date.now() / 1000 - t));
+      if (s < 60) return s + 's ago'; if (s < 3600) return Math.floor(s / 60) + 'm ago';
+      if (s < 86400) return Math.floor(s / 3600) + 'h ago'; return Math.floor(s / 86400) + 'd ago';
+    };
+
+    function pop(text) {
+      const p = document.createElement('div');
+      p.className = 'meter-pop'; p.textContent = text;
+      $('.meter-main').appendChild(p);
+      gsap.fromTo(p, { y: 30, scale: 0.6, opacity: 0 }, {
+        y: -60, scale: 1, opacity: 1, duration: 0.7, ease: 'back.out(2)',
+        onComplete: () => gsap.to(p, { opacity: 0, y: -110, duration: 0.8, delay: 1.2, onComplete: () => p.remove() })
+      });
+    }
+
+    function renderFeed(newOnes) {
+      const items = [...cache.items].sort((a, b) => b.t - a.t).slice(0, 5);
+      if (!items.length) return;
+      els.feed.innerHTML = items.map(it => `
+        <li data-sig="${it.s}">
+          <span class="f-amt">+${it.a.toFixed(it.a < 1 ? 3 : 2)} SOL</span>
+          <span class="f-meals">≈ ${Math.floor(it.a * state.price * D.MEALS_PER_USD).toLocaleString('en-US')} meals</span>
+          <span class="f-time">${it.t ? ago(it.t) : ''}</span>
+          <a href="https://solscan.io/tx/${it.s}" target="_blank" rel="noopener">View ↗</a>
+        </li>`).join('');
+      if (newOnes && newOnes.size) {
+        $$('li', els.feed).filter(li => newOnes.has(li.dataset.sig))
+          .forEach((li, i) => gsap.from(li, { x: -40, opacity: 0, duration: 0.8, delay: i * 0.08, ease: 'power3.out' }));
+      }
+    }
+
+    function render(newOnes) {
+      const sol = cache.items.reduce((s, i) => s + i.a, 0);
+      const usd = sol * state.price + D.OFFSET_USD;
+      const meals = Math.floor(usd * D.MEALS_PER_USD);
+      els.sol.textContent = sol.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      els.usd.textContent = fmtUsd(usd);
+      els.count.textContent = cache.items.length.toLocaleString('en-US');
+      renderFeed(newOnes);
+      if (!state.started) return;
+      if (meals !== state.shownMeals) {
+        const from = state.shownMeals, o = { v: from };
+        gsap.to(o, { v: meals, duration: from === 0 ? 2.8 : 1.8, ease: 'power3.out', overwrite: true, onUpdate: () => odo.set(o.v) });
+        if (from > 0 && newOnes && newOnes.size && meals > from) pop(`+${(meals - from).toLocaleString('en-US')} meals`);
+        state.shownMeals = meals;
+      }
+    }
+
+    let busy = false;
+    async function sync() {
+      if (busy || document.hidden) return;
+      busy = true;
+      try {
+        const [price, sigs] = await Promise.all([solPrice(), newSignatures()]);
+        state.price = price;
+        const fresh = sigs.filter(s => !s.err && !state.seen.has(s.signature));
+        const found = fresh.length ? await fetchTxs(fresh) : [];
+        if (sigs.length) cache.last = sigs[0].signature;
+        found.forEach(f => state.seen.add(f.s));
+        cache.items.push(...found);
+        saveCache();
+        state.lastSync = Date.now();
+        els.live.classList.remove('is-error', 'is-idle');
+        els.status.textContent = 'Live on-chain';
+        render(new Set(found.map(f => f.s)));
+      } catch (e) {
+        els.live.classList.add('is-error');
+        els.status.textContent = 'Reconnecting';
+      } finally { busy = false; }
+    }
+
+    setInterval(() => {
+      if (!state.lastSync) { els.updated.textContent = 'Reading the chain…'; return; }
+      const s = Math.floor((Date.now() - state.lastSync) / 1000);
+      els.updated.textContent = `Updated ${s < 2 ? 'just now' : s + 's ago'} · checks every ${Math.round(D.REFRESH_MS / 1000)}s`;
+    }, 1000);
+
+    ScrollTrigger.create({
+      trigger: '.meter', start: 'top 75%', once: true,
+      onEnter: () => { state.started = true; render(); }
+    });
+    if (cache.items.length) render();
+    sync();
+    setInterval(sync, D.REFRESH_MS);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) sync(); });
+  }
+
+  /* =========================================================
      MAIN
      ========================================================= */
   function init() {
@@ -289,7 +570,6 @@
     const heroChars = $$('.hero-title .line-in').flatMap(splitChars);
     $$('[data-split]').forEach(el => (el._chars = splitMasked(el)));
     const manifestoWords = splitWords($('[data-words]'));
-    const bigChars = splitChars($('.big-word'));
 
     /* ---------- Preloader → hero intro ---------- */
     gsap.set(plChars, { yPercent: 110 });
@@ -308,12 +588,14 @@
         .from('.hero-glow', { scale: 0.4, opacity: 0, duration: 2.2, ease: 'power2.out' }, 0)
         .from('.eyebrow', { x: -30, opacity: 0, duration: 1, ease: 'power3.out' }, 0.5)
         .from('.hero-bottom > *', { y: 50, opacity: 0, duration: 1.1, stagger: 0.12, ease: 'power3.out' }, 0.7)
-        .from('.scroll-cue', { scaleY: 0, transformOrigin: 'top', duration: 0.8 }, 1.2);
+        .from('.scroll-cue', { scaleY: 0, transformOrigin: 'top', duration: 0.8 }, 1.2)
+        .add(() => $('.hero-title').classList.add('waved'), 0.9);
       return tl;
     };
 
     const pl = gsap.timeline({ defaults: { ease: 'power3.inOut' } });
-    pl.to('.pl-plate circle', { strokeDashoffset: 0, duration: reduce ? 0.3 : 1.9, stagger: 0.18 }, 0)
+    pl.fromTo('.pl-logo', { scale: 0.6, rotate: -12 }, { scale: 1, rotate: 0, duration: 1.2, ease: 'elastic.out(1, .6)' }, 0)
+      .to('.pl-fill', { clipPath: 'inset(0% 0 0 0)', duration: reduce ? 0.5 : 2.2, ease: 'power2.inOut' }, 0)
       .to(counter, {
         v: 100, duration: reduce ? 0.5 : 2.2, ease: 'power2.inOut',
         onUpdate: () => (countEl.textContent = String(Math.round(counter.v)).padStart(3, '0'))
@@ -358,9 +640,13 @@
     gsap.timeline({ scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } })
       .to('.hero-title .line:nth-child(1) .line-in', { xPercent: -14, ease: 'none' }, 0)
       .to('.hero-title .line:nth-child(2) .line-in', { xPercent: 10, ease: 'none' }, 0)
+      .to('.hero-title .line:nth-child(3) .line-in', { xPercent: -6, ease: 'none' }, 0)
       .to('.coin-stage', { yPercent: 75, scale: 0.65, rotate: 25, ease: 'none' }, 0)
       .to('.hero-glow', { yPercent: 25, ease: 'none' }, 0)
       .to('.hero-bottom', { yPercent: -40, ease: 'none' }, 0);
+
+    /* ---------- Meal meter ---------- */
+    initMeter();
 
     /* ---------- Bands: velocity skew + parallax ---------- */
     const skewR = gsap.quickTo('.band-red .marquee-track', 'skewX', { duration: 0.5, ease: 'power3' });
@@ -382,7 +668,11 @@
     $$('[data-split]').forEach(el => {
       gsap.from(el._chars, {
         yPercent: 115, rotate: 6, duration: 1.1, stagger: 0.022, ease: 'expo.out',
-        scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none reverse' }
+        scrollTrigger: {
+          trigger: el, start: 'top 85%', toggleActions: 'play none none reverse',
+          onEnter: () => el.classList.add('waved'),
+          onLeaveBack: () => el.classList.remove('waved')
+        }
       });
     });
     $$('[data-reveal]').forEach(el => {
@@ -525,10 +815,17 @@
     });
 
     /* ---------- Footer ---------- */
-    gsap.from(bigChars, {
-      yPercent: 105, ease: 'none', stagger: 0.06,
-      scrollTrigger: { trigger: '.big-word', start: 'top 98%', end: 'bottom 75%', scrub: 1 }
-    });
+    gsap.fromTo('.banner-card',
+      { rotateX: 38, rotate: -7, scale: 0.78, yPercent: 30, transformPerspective: 1600 },
+      { rotateX: 0, rotate: 0, scale: 1, yPercent: 0, ease: 'none',
+        scrollTrigger: { trigger: '.banner-stage', start: 'top bottom', end: 'center 60%', scrub: 1 } });
+
+    /* ---------- Section themes (created last, after all pins) ---------- */
+    $$('[data-theme]').forEach(sec => ScrollTrigger.create({
+      trigger: sec, start: 'top 55%', end: 'bottom 55%',
+      onEnter: () => setTheme(sec.dataset.theme),
+      onEnterBack: () => setTheme(sec.dataset.theme)
+    }));
 
     // late images/fonts → recalc
     addEventListener('load', () => ScrollTrigger.refresh());
