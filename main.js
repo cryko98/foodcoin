@@ -748,6 +748,18 @@
     });
 
     /* ---------- The table (pinned) ---------- */
+    // landscape table on wide stages, rotated inside the SVG on tall ones (always fits, never overlaps)
+    const tsSvg = $('.ts-svg'), tsWorld = $('.ts-world'), tsStage = $('.ts-stage');
+    const orientTable = () => {
+      const r = tsStage.getBoundingClientRect();
+      const portrait = r.height > 0 && r.width / r.height < 1.25;
+      tsSvg.setAttribute('viewBox', portrait ? '0 0 600 1200' : '0 0 1200 600');
+      if (portrait) tsWorld.setAttribute('transform', 'translate(600 0) rotate(90)');
+      else tsWorld.removeAttribute('transform');
+    };
+    orientTable();
+    ScrollTrigger.addEventListener('refreshInit', orientTable);
+
     const heads = $$('.ts-head');
     gsap.set(heads.slice(1), { yPercent: 110 });
     gsap.set('.food', { scale: 0, rotation: -120, transformOrigin: '50% 50%' });
@@ -821,8 +833,10 @@
         scrollTrigger: { trigger: '.banner-stage', start: 'top bottom', end: 'center 60%', scrub: 1 } });
 
     /* ---------- Section themes (created last, after all pins) ---------- */
+    // pinned sections: use their pin-spacer so the theme covers the whole pinned scroll distance
     $$('[data-theme]').forEach(sec => ScrollTrigger.create({
-      trigger: sec, start: 'top 55%', end: 'bottom 55%',
+      trigger: sec.parentElement.classList.contains('pin-spacer') ? sec.parentElement : sec,
+      start: 'top 55%', end: 'bottom 55%',
       onEnter: () => setTheme(sec.dataset.theme),
       onEnterBack: () => setTheme(sec.dataset.theme)
     }));
