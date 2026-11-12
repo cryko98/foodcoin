@@ -7,7 +7,7 @@
   /* ======= LAUNCH CONFIG: fill these in when ready ======= */
   const CONFIG = {
     CA: '',       // Solana contract address. Empty = "COMING SOON"
-    X_URL: '',    // e.g. 'https://x.com/yourhandle'. Empty = "soon" toast
+    X_URL: 'https://x.com/foodcoinpf', // official X account
     BUY_URL: '',  // e.g. pump.fun / Raydium / Jupiter link. Empty = "soon" toast
 
     /* Meal Meter: reads donations straight from the Solana chain */
