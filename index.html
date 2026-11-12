@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FoodCoin ($FOODCOIN) — Put food on the table</title>
+  <meta name="description" content="$FOODCOIN is a Solana memecoin with a dinner plan: creator rewards from every trade go to feeding families who can't afford food this holiday season.">
+  <meta name="theme-color" content="#0e0907">
+  <meta property="og:title" content="FoodCoin ($FOODCOIN) — Put food on the table">
+  <meta property="og:description" content="A Solana memecoin that turns trading volume into holiday dinners for families in need.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/logo.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..800,0..100;1,9..144,300..800,0..100&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="is-loading">
+
+  <!-- ============ PRELOADER ============ -->
+  <div class="preloader" aria-hidden="true">
+    <div class="pl-curtain top"></div>
+    <div class="pl-curtain bottom"></div>
+    <div class="pl-inner">
+      <svg class="pl-plate" viewBox="0 0 240 240">
+        <circle cx="120" cy="120" r="110" pathLength="1"/>
+        <circle cx="120" cy="120" r="82" pathLength="1"/>
+        <circle cx="120" cy="120" r="30" pathLength="1" class="pl-dot"/>
+      </svg>
+      <div class="pl-word">Setting the table</div>
+      <div class="pl-count"><span>000</span>%</div>
+    </div>
+  </div>
+
+  <!-- ============ CHROME ============ -->
+  <div class="progress"><span></span></div>
+  <div class="cursor" aria-hidden="true"></div>
+  <div class="cursor-dot" aria-hidden="true"></div>
+  <canvas id="snow" aria-hidden="true"></canvas>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="toast" role="status" aria-live="polite"></div>
+
+  <header class="nav">
+    <a href="#top" class="brand" data-scroll>
+      <img src="assets/favicon.svg" alt="" width="34" height="34">
+      <span>FoodCoin</span>
+    </a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#story" data-scroll>Story</a>
+      <a href="#mission" data-scroll>How it works</a>
+      <a href="#table" data-scroll>The table</a>
+      <a href="#token" data-scroll>Token</a>
+      <a href="#advent" data-scroll>Roadmap</a>
+    </nav>
+    <div class="nav-actions">
+      <span class="pill"><span class="dot"></span>CA soon</span>
+      <a href="#" class="x-btn magnetic" data-x-link aria-label="FoodCoin on X">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="hero-glow"></div>
+      <p class="eyebrow">A Solana memecoin with a dinner plan</p>
+
+      <h1 class="hero-title" aria-label="Put food on the table.">
+        <span class="line"><span class="line-in">Put food</span></span>
+        <span class="line"><span class="line-in">on the <em>table.</em></span></span>
+      </h1>
+
+      <div class="coin-stage" aria-hidden="true">
+        <div class="coin-float">
+          <div class="coin-tilt">
+            <div class="coin">
+              <div class="coin-face coin-front"><img src="assets/logo.svg" alt=""></div>
+              <div class="coin-face coin-back"><img src="assets/coin-back.svg" alt=""></div>
+            </div>
+          </div>
+        </div>
+        <div class="coin-shadow"></div>
+      </div>
+
+      <div class="hero-bottom">
+        <p class="hero-copy">
+          <strong>$FOODCOIN</strong> turns trading volume into dinner. Creator rewards from every trade go to families who can't afford food this holiday season.
+        </p>
+        <div class="hero-cta">
+          <a href="#" class="btn btn-primary magnetic" data-buy-link><span>Buy $FOODCOIN</span><i>Soon</i></a>
+          <a href="#story" class="btn btn-ghost magnetic" data-scroll><span>Read the story</span></a>
+        </div>
+        <div class="countdown" aria-label="Countdown to Christmas Eve">
+          <span class="cd-label">Christmas Eve in</span>
+          <div class="cd-digits">
+            <span><b data-cd="d">00</b><small>days</small></span>
+            <span><b data-cd="h">00</b><small>hrs</small></span>
+            <span><b data-cd="m">00</b><small>min</small></span>
+            <span><b data-cd="s">00</b><small>sec</small></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="scroll-cue" aria-hidden="true"><span></span></div>
+    </section>
+
+    <!-- ============ MARQUEE ============ -->
+    <section class="bands" aria-hidden="true">
+      <div class="band band-red">
+        <div class="marquee-track">
+          <span>Put food on the table <i>✦</i> $FOODCOIN <i>✦</i> Feed a family this Christmas <i>✦</i> One trade, one plate <i>✦</i>&nbsp;</span>
+          <span>Put food on the table <i>✦</i> $FOODCOIN <i>✦</i> Feed a family this Christmas <i>✦</i> One trade, one plate <i>✦</i>&nbsp;</span>
+        </div>
+      </div>
+      <div class="band band-gold">
+        <div class="marquee-track reverse">
+          <span>Nobody should be hungry on Christmas <i>✦</i> Built on Solana <i>✦</i> Creator rewards → real meals <i>✦</i>&nbsp;</span>
+          <span>Nobody should be hungry on Christmas <i>✦</i> Built on Solana <i>✦</i> Creator rewards → real meals <i>✦</i>&nbsp;</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MANIFESTO ============ -->
+    <section class="manifesto" id="story">
+      <p class="label"><span>01</span> The story</p>
+      <p class="manifesto-text" data-words>
+        This December, while most of us gather around tables heavy with food, <em class="hl">millions of families</em> will sit down to almost nothing. Not because they don't work. Not because they don't try. Because groceries got expensive and the holidays got harder. We think a memecoin can do more than pump. <em class="hl">We think it can feed people.</em>
+      </p>
+    </section>
+
+    <!-- ============ STATS (pinned) ============ -->
+    <section class="stats" aria-label="Hunger statistics">
+      <div class="stats-head">
+        <p class="label"><span>02</span> The empty plate index</p>
+        <p class="stat-index"><b>01</b> / 05</p>
+      </div>
+
+      <div class="stat-plate-wrap" aria-hidden="true">
+        <svg class="cutlery fork" viewBox="0 0 40 300"><path d="M6 0v70c0 10 5 16 10 18v212h8V88c5-2 10-8 10-18V0h-4v62h-3V0h-4v62h-2V0h-4v62h-3V0z"/></svg>
+        <svg class="stat-plate" viewBox="0 0 600 600">
+          <defs>
+            <radialGradient id="plateG" cx="50%" cy="42%" r="60%">
+              <stop offset="0" stop-color="#2b1f19"/>
+              <stop offset="1" stop-color="#120c09"/>
+            </radialGradient>
+          </defs>
+          <circle cx="300" cy="300" r="290" fill="url(#plateG)" stroke="rgba(246,237,220,.09)" stroke-width="1.5"/>
+          <circle cx="300" cy="300" r="214" fill="none" stroke="rgba(246,237,220,.07)" stroke-width="2"/>
+          <circle cx="300" cy="300" r="290" fill="none" stroke="rgba(234,181,77,.12)" stroke-width="3"/>
+          <circle class="stat-ring" cx="300" cy="300" r="290" fill="none" stroke="#eab54d" stroke-width="3" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" transform="rotate(-90 300 300)"/>
+        </svg>
+        <svg class="cutlery knife" viewBox="0 0 40 300"><path d="M14 0c14 8 22 40 22 96 0 8-4 12-10 12v192h-8V108h-4V8c0-5 0-8 0-8z"/></svg>
+      </div>
+
+      <div class="stat-items">
+        <div class="stat" data-to="47000000">
+          <div class="stat-num"><span class="n">0</span></div>
+          <p class="stat-cap">people in the United States live in food-insecure households.</p>
+          <p class="stat-src">Feeding America · Map the Meal Gap 2025</p>
+        </div>
+        <div class="stat">
+          <div class="stat-num"><span class="n">1 in 5</span></div>
+          <p class="stat-cap">American children face food insecurity. In some rural counties, it's one in two.</p>
+          <p class="stat-src">Feeding America · Map the Meal Gap 2025</p>
+        </div>
+        <div class="stat" data-to="49" data-suffix="%">
+          <div class="stat-num"><span class="n">0%</span></div>
+          <p class="stat-cap">of Australian families with kids were worried about simply putting food on the table last Christmas.</p>
+          <p class="stat-src">St Vincent de Paul Society · 2025 Christmas survey</p>
+        </div>
+        <div class="stat" data-to="4200000">
+          <div class="stat-num"><span class="n">0</span></div>
+          <p class="stat-cap">Australians went without food just to afford Christmas.</p>
+          <p class="stat-src">The Salvation Army · 2025</p>
+        </div>
+        <div class="stat" data-to="673000000">
+          <div class="stat-num"><span class="n">0</span></div>
+          <p class="stat-cap">people faced hunger worldwide in 2024. Roughly one in every twelve humans.</p>
+          <p class="stat-src">FAO, IFAD, UNICEF, WFP &amp; WHO · SOFI 2025</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MISSION (horizontal) ============ -->
+    <section class="mission" id="mission">
+      <div class="mission-pin">
+        <div class="mission-track">
+          <div class="m-intro">
+            <p class="label"><span>03</span> How it works</p>
+            <h2 data-split>So we built a coin that <em>cooks.</em></h2>
+            <p class="m-lead">We can't fix world hunger with a memecoin. But we can make sure the money a memecoin generates ends up as food on real tables.</p>
+          </div>
+
+          <article class="m-card">
+            <div class="m-top"><span class="m-num">01</span>
+              <svg class="m-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M8 34l10-10 7 7 15-15M30 16h10v10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <h3>Trade</h3>
+              <p>Every buy and sell of $FOODCOIN on Solana generates creator rewards. Volume is the fuel.</p>
+            </div>
+          </article>
+
+          <article class="m-card">
+            <div class="m-top"><span class="m-num">02</span>
+              <svg class="m-icon" viewBox="0 0 48 48" aria-hidden="true"><ellipse cx="24" cy="14" rx="14" ry="5" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M10 14v10c0 3 6 5 14 5s14-2 14-5V14M10 24v10c0 3 6 5 14 5s14-2 14-5V24" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>
+            </div>
+            <div>
+              <h3>Collect</h3>
+              <p>Creator rewards are routed to the Table Fund: a public wallet anyone can watch fill up, block by block.</p>
+            </div>
+          </article>
+
+          <article class="m-card">
+            <div class="m-top"><span class="m-num">03</span>
+              <svg class="m-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M8 26h32a16 13 0 0 1-32 0zM6 26h36M18 20c-3-3 3-5 0-8M24 20c-3-3 3-5 0-8M30 20c-3-3 3-5 0-8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </div>
+            <div>
+              <h3>Cook</h3>
+              <p>The fund becomes groceries, holiday meal boxes and donations to food banks that feed families directly.</p>
+            </div>
+          </article>
+
+          <article class="m-card">
+            <div class="m-top"><span class="m-num">04</span>
+              <svg class="m-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="10" y="6" width="28" height="36" rx="3" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M16 16h16M16 23h16M16 30h9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M29 33l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <h3>Prove</h3>
+              <p>Every donation and every receipt gets posted on X. On-chain in, real meals out, nothing hidden.</p>
+            </div>
+          </article>
+
+          <div class="m-outro">
+            <p>Volume in.<br><em>Dinner out.</em></p>
+          </div>
+        </div>
+
+        <div class="flow" aria-hidden="true">
+          <div class="flow-line"><span></span></div>
+          <img class="flow-coin" src="assets/favicon.svg" alt="">
+          <div class="flow-labels"><span>Trade</span><span>Collect</span><span>Cook</span><span>Prove</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ THE TABLE (pinned) ============ -->
+    <section class="table-scene" id="table" aria-label="The table fills up as you scroll">
+      <div class="ts-top">
+        <p class="label"><span>04</span> The table</p>
+        <div class="ts-heads">
+          <h2 class="ts-head">An empty table.</h2>
+          <h2 class="ts-head">One trade lights a <em>candle.</em></h2>
+          <h2 class="ts-head">Every trade fills a <em>plate.</em></h2>
+          <h2 class="ts-head">That's the whole <em>recipe.</em></h2>
+        </div>
+      </div>
+
+      <div class="ts-stage">
+        <div class="ts-glow"></div>
+        <svg class="ts-svg" viewBox="0 0 1200 600" aria-hidden="true">
+          <defs>
+            <linearGradient id="cloth" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#6a1a13"/>
+              <stop offset="1" stop-color="#3f0d08"/>
+            </linearGradient>
+            <radialGradient id="plateFill" cx="45%" cy="40%" r="65%">
+              <stop offset="0" stop-color="#fbf4e6"/>
+              <stop offset="1" stop-color="#dccdb1"/>
+            </radialGradient>
+            <radialGradient id="flameGlow">
+              <stop offset="0" stop-color="#ffd27a" stop-opacity=".9"/>
+              <stop offset=".35" stop-color="#ff9a3c" stop-opacity=".35"/>
+              <stop offset="1" stop-color="#ff7a1a" stop-opacity="0"/>
+            </radialGradient>
+            <clipPath id="pieClip"><circle r="26"/></clipPath>
+            <polygon id="star" points="0,-14 3.5,-4.9 13.3,-4.3 5.7,1.9 8.2,11.3 0,6 -8.2,11.3 -5.7,1.9 -13.3,-4.3 -3.5,-4.9"/>
+            <g id="setting">
+              <circle r="58" fill="rgba(0,0,0,.28)" cy="5"/>
+              <circle r="56" fill="url(#plateFill)"/>
+              <circle r="41" fill="none" stroke="#cdbb9b" stroke-width="2"/>
+              <rect x="-80" y="-30" width="5" height="60" rx="2.5" fill="#c9b48f"/>
+              <rect x="-86" y="-30" width="2" height="16" rx="1" fill="#c9b48f"/>
+              <rect x="-72" y="-30" width="2" height="16" rx="1" fill="#c9b48f"/>
+              <path d="M74 -30c8 4 9 20 9 32h-4v28h-5z" fill="#c9b48f"/>
+            </g>
+          </defs>
+
+          <!-- chairs -->
+          <g class="chairs">
+            <rect class="chair" x="225" y="88" width="90" height="44" rx="14"/>
+            <rect class="chair" x="395" y="88" width="90" height="44" rx="14"/>
+            <rect class="chair" x="715" y="88" width="90" height="44" rx="14"/>
+            <rect class="chair" x="885" y="88" width="90" height="44" rx="14"/>
+            <rect class="chair" x="225" y="468" width="90" height="44" rx="14"/>
+            <rect class="chair" x="395" y="468" width="90" height="44" rx="14"/>
+            <rect class="chair" x="715" y="468" width="90" height="44" rx="14"/>
+            <rect class="chair" x="885" y="468" width="90" height="44" rx="14"/>
+          </g>
+
+          <!-- table -->
+          <rect x="140" y="150" width="920" height="300" rx="150" fill="url(#cloth)" stroke="rgba(246,237,220,.12)" stroke-width="2"/>
+          <rect x="160" y="168" width="880" height="264" rx="132" fill="none" stroke="rgba(234,181,77,.18)" stroke-width="1.5" stroke-dasharray="2 8"/>
+          <rect x="200" y="282" width="800" height="36" fill="rgba(234,181,77,.16)"/>
+          <line x1="200" y1="287" x2="1000" y2="287" stroke="rgba(234,181,77,.35)" stroke-dasharray="6 6"/>
+          <line x1="200" y1="313" x2="1000" y2="313" stroke="rgba(234,181,77,.35)" stroke-dasharray="6 6"/>
+
+          <!-- centerpiece wreath -->
+          <g class="wreath" transform="translate(600 300)">
+            <g fill="#2b5a45">
+              <ellipse cx="-82" cy="0" rx="12" ry="6"/><ellipse cx="82" cy="0" rx="12" ry="6"/>
+              <ellipse cx="-66" cy="-22" rx="12" ry="6" transform="rotate(-25 -66 -22)"/><ellipse cx="66" cy="-22" rx="12" ry="6" transform="rotate(25 66 -22)"/>
+              <ellipse cx="-66" cy="22" rx="12" ry="6" transform="rotate(25 -66 22)"/><ellipse cx="66" cy="22" rx="12" ry="6" transform="rotate(-25 66 22)"/>
+              <ellipse cx="-40" cy="-32" rx="12" ry="6" transform="rotate(-10 -40 -32)"/><ellipse cx="40" cy="-32" rx="12" ry="6" transform="rotate(10 40 -32)"/>
+              <ellipse cx="-40" cy="32" rx="12" ry="6" transform="rotate(10 -40 32)"/><ellipse cx="40" cy="32" rx="12" ry="6" transform="rotate(-10 40 32)"/>
+              <ellipse cx="0" cy="-36" rx="12" ry="6"/><ellipse cx="0" cy="36" rx="12" ry="6"/>
+            </g>
+            <g fill="#cf3a2f">
+              <circle cx="-74" cy="-12" r="4"/><circle cx="74" cy="12" r="4"/><circle cx="-22" cy="-36" r="4"/>
+              <circle cx="22" cy="36" r="4"/><circle cx="52" cy="-30" r="4"/><circle cx="-52" cy="30" r="4"/>
+            </g>
+          </g>
+
+          <!-- candles -->
+          <g class="candles">
+            <g class="candle" transform="translate(560 300)">
+              <circle class="candle-glow" r="110" fill="url(#flameGlow)"/>
+              <circle r="12" fill="#f3e6cc"/><circle r="12" fill="none" stroke="#c9b48f" stroke-width="2"/>
+              <path class="candle-flame" d="M0 -14c6 7 7 12 0 16c-7-4-6-9 0-16z" fill="#ffd36b"/>
+            </g>
+            <g class="candle" transform="translate(600 300)">
+              <circle class="candle-glow" r="120" fill="url(#flameGlow)"/>
+              <circle r="13" fill="#f3e6cc"/><circle r="13" fill="none" stroke="#c9b48f" stroke-width="2"/>
+              <path class="candle-flame" d="M0 -15c6 7 7 13 0 17c-7-4-6-10 0-17z" fill="#ffd36b"/>
+            </g>
+            <g class="candle" transform="translate(640 300)">
+              <circle class="candle-glow" r="110" fill="url(#flameGlow)"/>
+              <circle r="12" fill="#f3e6cc"/><circle r="12" fill="none" stroke="#c9b48f" stroke-width="2"/>
+              <path class="candle-flame" d="M0 -14c6 7 7 12 0 16c-7-4-6-9 0-16z" fill="#ffd36b"/>
+            </g>
+          </g>
+
+          <!-- place settings + food -->
+          <g class="place" transform="translate(270 225)"><g class="plate"><use href="#setting"/></g>
+            <g class="food"><!-- roast -->
+              <ellipse rx="30" ry="22" fill="#8f4219"/><ellipse cx="-3" cy="-3" rx="22" ry="15" fill="#b8612a"/>
+              <ellipse cx="-9" cy="-9" rx="10" ry="5" fill="#e09a58" opacity=".7"/>
+              <circle cx="27" cy="12" r="7" fill="#7c3612"/><circle cx="-27" cy="12" r="7" fill="#7c3612"/>
+              <circle cx="12" cy="-16" r="3" fill="#3f7d4f"/><circle cx="17" cy="-12" r="3" fill="#4f9560"/><circle cx="-18" cy="16" r="3" fill="#3f7d4f"/>
+            </g>
+          </g>
+          <g class="place" transform="translate(440 225)"><g class="plate"><use href="#setting"/></g>
+            <g class="food"><!-- salad -->
+              <circle cx="-12" cy="-8" r="12" fill="#3f7d4f"/><circle cx="10" cy="-10" r="11" fill="#5a9e5c"/>
+              <circle cx="0" cy="8" r="13" fill="#2f6a42"/><circle cx="-16" cy="10" r="8" fill="#6fb36a"/><circle cx="16" cy="10" r="9" fill="#4a8d52"/>
+              <circle cx="6" cy="-2" r="5" fill="#d43b2f"/><circle cx="-6" cy="14" r="4" fill="#d43b2f"/><circle cx="18" cy="-3" r="4" fill="#e04a3a"/>
+              <circle cx="-4" cy="-14" r="2" fill="#f6eddc"/><circle cx="12" cy="14" r="2" fill="#f6eddc"/>
+            </g>
+          </g>
+          <g class="place" transform="translate(760 225)"><g class="plate"><use href="#setting"/></g>
+            <g class="food"><!-- soup -->
+              <circle r="34" fill="#efe5d3"/><circle r="34" fill="none" stroke="#cdbb9b" stroke-width="2"/>
+              <circle r="27" fill="#d9762b"/>
+              <path d="M-12 2a11 11 0 1 1 22 0a7 7 0 1 1-14 0" fill="none" stroke="#f6eddc" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="14" cy="-12" r="2.5" fill="#3f7d4f"/><circle cx="-14" cy="12" r="2.5" fill="#3f7d4f"/><circle cx="-16" cy="-8" r="2" fill="#3f7d4f"/>
+            </g>
+          </g>
+          <g class="place" transform="translate(930 225)"><g class="plate"><use href="#setting"/></g>
+            <g class="food"><!-- bread -->
+              <ellipse cx="-12" cy="-7" rx="15" ry="11" fill="#c98a43" transform="rotate(-15 -12 -7)"/>
+              <ellipse cx="13" cy="-6" rx="15" ry="11" fill="#d39a52" transform="rotate(12 13 -6)"/>
+              <ellipse cx="0" cy="13" rx="15" ry="11" fill="#bf7f3a"/>
+              <g stroke="#8a5622" stroke-width="2" stroke-linecap="round"><path d="M-18 -9l9 -3M-17 -3l9 -3M8 -10l9 3M8 -4l9 3M-6 12h12M-6 17h12"/></g>
+            </g>
+          </g>
+          <g class="place" transform="translate(270 375)"><g class="plate"><use href="#setting"/></g>
+            <g class="food"><!-- pie -->
+              <circle r="32" fill="#b9722f"/><circle r="26" fill="#7d1f1a"/>
+              <g clip-path="url(#pieClip)" stroke="#e0a457" stroke-width="5"><path d="M-14 -30v60M0 -30v60M14 -30v60M-30 -14h60M-30 0h60M-30 14h60"/></g>
+            </g>
+          </g>
+          <g class="place" transform="translate(440 375)"><g class="plate"><use href="#setting"/></g>
+            <g class="food"><!-- potatoes -->
+              <circle cx="-14" cy="-10" r="10" fill="#e7c15f"/><circle cx="8" cy="-14" r="9" fill="#dcb24f"/><circle cx="16" cy="6" r="10" fill="#e7c15f"/>
+              <circle cx="-4" cy="12" r="10" fill="#dcb24f"/><circle cx="-18" cy="10" r="7" fill="#e7c15f"/><circle cx="2" cy="-1" r="7" fill="#f0cf73"/>
+              <circle cx="-16" cy="-13" r="3" fill="#fff1c4" opacity=".8"/><circle cx="14" cy="3" r="3" fill="#fff1c4" opacity=".8"/>
+              <circle cx="-8" cy="-2" r="2" fill="#3f7d4f"/><circle cx="10" cy="14" r="2" fill="#3f7d4f"/><circle cx="20" cy="-8" r="2" fill="#3f7d4f"/>
+            </g>
+          </g>
+          <g class="place" transform="translate(760 375)"><g class="plate"><use href="#setting"/></g>
+            <g class="food"><!-- pasta -->
+              <circle r="28" fill="#efd27e"/>
+              <g fill="none" stroke="#d9b252" stroke-width="2.5" stroke-linecap="round">
+                <path d="M-22 -6c8-10 16 6 24-4s14 4 18 0"/><path d="M-20 8c8-10 14 6 22-4s12 6 18 0"/><path d="M-12 -18c8-6 14 6 22-2"/>
+              </g>
+              <circle r="11" fill="#c7372f"/><circle cx="-3" cy="-3" r="4" fill="#e05a4a"/>
+              <ellipse cx="6" cy="-4" rx="5" ry="3" fill="#3f7d4f" transform="rotate(30 6 -4)"/>
+            </g>
+          </g>
+          <g class="place" transform="translate(930 375)"><g class="plate"><use href="#setting"/></g>
+            <g class="food"><!-- cookies -->
+              <use href="#star" fill="#b06a2a" stroke="#f6eddc" stroke-width="1.5" transform="translate(-13 -9) rotate(10)"/>
+              <use href="#star" fill="#a35f25" stroke="#f6eddc" stroke-width="1.5" transform="translate(14 -8) rotate(-15)"/>
+              <use href="#star" fill="#b06a2a" stroke="#f6eddc" stroke-width="1.5" transform="translate(0 14) rotate(30)"/>
+              <circle cx="-16" cy="14" r="3" fill="#cf3a2f"/><circle cx="18" cy="14" r="3" fill="#2b5a45"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+
+      <div class="ts-foot">
+        <span>Candles lit <b class="c-candles">0</b>/3</span>
+        <span>Plates filled <b class="c-plates">0</b>/8</span>
+        <span class="ts-hint">Keep scrolling to serve</span>
+      </div>
+    </section>
+
+    <!-- ============ TOKEN ============ -->
+    <section class="token" id="token">
+      <div class="token-grid">
+        <div class="token-copy">
+          <p class="label"><span>05</span> The coin</p>
+          <h2 data-split>One ticker.<br><em>One job.</em></h2>
+          <p class="token-lead">$FOODCOIN is a community memecoin on Solana with a single purpose: turn trading volume into dinner. Creator rewards are pledged to the Table Fund and spent on food for families who need it most over the holidays.</p>
+          <dl class="facts">
+            <div><dt>Ticker</dt><dd>$FOODCOIN</dd></div>
+            <div><dt>Network</dt><dd>Solana</dd></div>
+            <div><dt>Creator rewards</dt><dd>→ The Table Fund</dd></div>
+            <div><dt>Receipts</dt><dd>Posted publicly on X</dd></div>
+          </dl>
+        </div>
+
+        <div class="ca-card" data-hover>
+          <div class="ca-glow"></div>
+          <div class="ca-top">
+            <span class="label">Contract address</span>
+            <span class="pill"><span class="dot"></span>Solana</span>
+          </div>
+          <p class="ca-value" data-ca>COMING SOON</p>
+          <div class="ca-actions">
+            <button class="btn btn-primary magnetic" type="button" data-copy-ca><span>Copy CA</span></button>
+            <a href="#" class="btn btn-ghost magnetic" data-x-link>
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              <span>Follow on X</span>
+            </a>
+          </div>
+          <p class="ca-note">Only trust the address posted here and on our official X. Never on DMs.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ADVENT ROADMAP ============ -->
+    <section class="advent" id="advent">
+      <p class="label"><span>06</span> Roadmap</p>
+      <h2 class="advent-title" data-split>Four candles <em>to Christmas.</em></h2>
+
+      <div class="advent-grid">
+        <article class="week" style="--h:150px">
+          <div class="candle-css"><div class="flame-wrap"><div class="flame"></div></div><div class="wick"></div><div class="body"></div></div>
+          <span class="week-n">I</span>
+          <h3>Light the first candle</h3>
+          <p>Launch on Solana. Contract address revealed here and on X. The table gets its first guests.</p>
+        </article>
+        <article class="week" style="--h:130px">
+          <div class="candle-css"><div class="flame-wrap"><div class="flame"></div></div><div class="wick"></div><div class="body"></div></div>
+          <span class="week-n">II</span>
+          <h3>Open the Table Fund</h3>
+          <p>The creator-reward wallet goes public. Anyone can watch it fill, block by block.</p>
+        </article>
+        <article class="week" style="--h:110px">
+          <div class="candle-css"><div class="flame-wrap"><div class="flame"></div></div><div class="wick"></div><div class="body pink"></div></div>
+          <span class="week-n">III</span>
+          <h3>Fill the plates</h3>
+          <p>The fund becomes groceries and holiday meal boxes through food banks and family charities. Every receipt posted.</p>
+        </article>
+        <article class="week" style="--h:90px">
+          <div class="candle-css"><div class="flame-wrap"><div class="flame"></div></div><div class="wick"></div><div class="body"></div></div>
+          <span class="week-n">IV</span>
+          <h3>Christmas Eve feast</h3>
+          <p>Our biggest drop of the season, and the community helps choose where the meals go.</p>
+        </article>
+      </div>
+      <p class="advent-after" data-reveal>Hunger doesn't end on December 26th. <em>Neither do we.</em></p>
+    </section>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="footer">
+      <div class="footer-cta">
+        <h2 data-split>Pull up a <em>chair.</em></h2>
+        <div class="footer-btns">
+          <a href="#" class="btn btn-primary magnetic" data-x-link>
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            <span>Join on X</span>
+          </a>
+          <a href="#token" class="btn btn-ghost magnetic" data-scroll><span>Get the CA</span></a>
+        </div>
+      </div>
+
+      <div class="big-word" aria-hidden="true">FOODCOIN</div>
+
+      <div class="footer-grid">
+        <div>
+          <p class="label">Sources</p>
+          <ul class="sources">
+            <li><a href="https://www.feedingamerica.org/about-us/press-room/Map-the-Meal-Gap-2025" target="_blank" rel="noopener">Feeding America, Map the Meal Gap 2025</a></li>
+            <li><a href="https://www.vinnies.org.au/vic/media-releases/festive-season-a-struggle-for-millions-survey-reveals" target="_blank" rel="noopener">St Vincent de Paul Society, festive season survey 2025</a></li>
+            <li><a href="https://www.salvationarmy.org.au/about-us/news-and-stories/media-newsroom/salvos-reveal-the-hidden-cost-of-christmas/" target="_blank" rel="noopener">The Salvation Army, the hidden cost of Christmas</a></li>
+            <li><a href="https://www.who.int/news/item/28-07-2025-global-hunger-declines-but-rises-in-africa-and-western-asia-un-report" target="_blank" rel="noopener">FAO, IFAD, UNICEF, WFP, WHO: SOFI 2025</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="label">Disclaimer</p>
+          <p class="disclaimer">$FOODCOIN is a memecoin with no intrinsic value or expectation of financial return. It is not an investment and nothing on this site is financial advice. Crypto is volatile, so only spend what you can afford to lose. Charitable giving is funded by creator rewards, depends on trading volume, and is reported publicly.</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span data-year></span> FoodCoin</span>
+        <span>Made with warm hands on Solana</span>
+        <a href="#top" data-scroll>Back to top ↑</a>
+      </div>
+    </footer>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
