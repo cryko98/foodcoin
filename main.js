@@ -704,6 +704,29 @@
     /* ---------- Meal meter ---------- */
     initMeter();
 
+    /* ---------- Explainer video ---------- */
+    (() => {
+      const frame = $('.ex-frame'), video = $('.ex-video'), play = $('.ex-play'), label = $('[data-ex-label]');
+      if (!frame) return;
+      // the screen tilts up and opens out as you scroll to it
+      gsap.fromTo(frame, { scale: 0.84, rotateX: 14, y: 60 }, {
+        scale: 1, rotateX: 0, y: 0, ease: 'none',
+        scrollTrigger: { trigger: '.ex-stage', start: 'top bottom', end: 'top 30%', scrub: 1 }
+      });
+      play.addEventListener('click', () => {
+        video.controls = true;
+        frame.classList.add('is-playing');
+        video.play().catch(() => { frame.classList.remove('is-playing'); });
+      });
+      video.addEventListener('ended', () => {
+        frame.classList.remove('is-playing');
+        video.controls = false;
+        label.textContent = 'Watch again · 1:11';
+      });
+      // pause when it scrolls out of view
+      new IntersectionObserver(([e]) => { if (!e.isIntersecting && !video.paused) video.pause(); }, { threshold: 0.15 }).observe(frame);
+    })();
+
     /* ---------- Bands: velocity skew + parallax ---------- */
     const skewR = gsap.quickTo('.band-red .marquee-track', 'skewX', { duration: 0.5, ease: 'power3' });
     const skewG = gsap.quickTo('.band-gold .marquee-track', 'skewX', { duration: 0.5, ease: 'power3' });
