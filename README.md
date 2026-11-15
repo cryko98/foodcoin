@@ -19,32 +19,41 @@ const CONFIG = {
 
 Every X button, the "Buy" button and the "Copy CA" button pick these up automatically.
 
-## Meal Meter (live on-chain donation counter)
+## Meal Meter (settled donations, server-side)
 
-The section under the hero reads the coin's pump.fun fee accounts straight from the Solana chain, in the visitor's
-browser (no backend). Everything is derived from `CONFIG.CA`:
+Meals are counted **only from donations already settled to Feeding America**, read from donate.gg's public
+receipts API by the serverless function  (Vercel deploys it automatically from ):
 
-1. **Fee-sharing config** (`sharing-config` PDA of the mint, pump.fun fees program): who receives the creator fee, and
-   whether the split is locked (`admin_revoked`).
-2. **Creator vault** (bonding curve, plus the PumpSwap WSOL vault after graduation): fees that have built up but
-   haven't been claimed yet. These count too.
-3. **Donation account** (`DonationFeePda`, the shareholder): what's on its way, plus `total_donated` (already delivered).
-   Its totals only count if the account belongs to this mint (`base_mint == CA`), so a shared account can't inflate
-   the number.
+    meals = floor( sum(usdNetE6 of settled  receipts) × 20 / 1,000,000 )
 
-Total SOL × live SOL price (Jupiter, CoinGecko fallback) × **20 meals per $1** (Feeding America) = the counter.
+- Net of donate.gg's processing fee ( is checked on every receipt).
+- No live SOL price: a settled donation keeps its recorded dollar value forever.
+- Receipts must match the  mint, Solana (101), the Pump Fees donation source, the FOOD donation config,
+  Feeding America, USDC settlement and a wrapped-SOL input, and carry a settlement tx/slot/timestamp.
+- Every page is read (no partial totals), receipts are deduplicated by receipt id (batches share one tx),
+  and already-counted history (seeded by ) can't silently disappear or change.
+- Creator-vault and donation-account balances are read from Solana (finalized, RPC failover) and shown as
+  *not yet counted*.
 
-`CONFIG.DONATION` in `main.js`:
+The browser only calls the same-origin ;  runs independently of the animation libraries.
 
-| Key | What it does |
-| --- | --- |
-| `RPC` | A CORS-enabled Solana RPC. The default (PublicNode) is free; for heavy traffic use your own free Helius URL. |
-| `MEALS_PER_USD` | `20`, per feedingamerica.org. |
-| `OFFSET_USD` | Donations made outside pump.fun, in USD. They're added to the total. |
-| `REFRESH_MS` | How often the chain is re-read (default 20s). |
+Optional Vercel environment variables:  (comma-separated, primary first, e.g. a Helius URL),
+ (higher donate.gg rate limit). They stay server-side.
 
-Before the mint exists on-chain the meter shows "Goes live at launch" and switches to live by itself once trading starts.
-Preview any coin locally: `http://localhost:5173/?ca=<MINT>` (the `?ca=` override only works on localhost).
+Local: Unknown command: "install"
+
+
+Did you mean one of these?
+  npm install # Install a package
+  npm uninstall # Remove a package
+To see a list of supported npm commands, run:
+  npm help,  (site + API on http://localhost:5173), Unknown command: "test"
+
+
+Did you mean this?
+  npm test # Test a package
+To see a list of supported npm commands, run:
+  npm help.
 
 ## Run locally
 

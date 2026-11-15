@@ -15,9 +15,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/fonts/fonts.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="is-loading">
@@ -117,18 +115,18 @@
       <div class="meter-card">
         <div class="meter-top">
           <p class="label"><span>Live</span> The meal meter</p>
-          <span class="live" data-m-live><i></i><b data-m-status>On-chain</b></span>
+          <span class="live" data-m-live><i></i><b data-m-status>Connecting</b></span>
         </div>
 
         <div class="meter-main">
-          <div class="odo" data-odo aria-live="polite" aria-label="Meals provided"></div>
-          <p class="meter-sub">meals put on the table by the $FOOD community, sent through <a href="https://www.donate.gg/charities/feeding-america" target="_blank" rel="noopener">donate.gg</a> to <a href="https://www.feedingamerica.org/" target="_blank" rel="noopener">Feeding America</a></p>
+          <div class="odo" data-odo aria-live="polite" aria-label="Estimated meals"></div>
+          <p class="meter-sub">estimated meals funded by $FOOD, from donations already settled to <a href="https://www.feedingamerica.org/" target="_blank" rel="noopener">Feeding America</a> through <a href="https://www.donate.gg/charities/feeding-america" target="_blank" rel="noopener">donate.gg</a></p>
         </div>
 
         <dl class="meter-stats">
-          <div><dt>Raised for charity</dt><dd data-m-usd>$0</dd></div>
-          <div><dt>In SOL</dt><dd data-m-sol>0.000</dd></div>
-          <div><dt>Delivered so far</dt><dd data-m-sent>0.000 SOL</dd></div>
+          <div><dt>Settled to charity (net)</dt><dd data-m-usd>—</dd></div>
+          <div><dt>Settled receipts</dt><dd data-m-receipts>—</dd></div>
+          <div><dt>Processing fees (not counted)</dt><dd data-m-fees>—</dd></div>
           <div class="rate"><dt>The math</dt><dd>$1 = 20 meals</dd></div>
         </dl>
 
@@ -138,29 +136,29 @@
             <ol class="trail" data-trail>
               <li>
                 <span class="t-step">1</span>
-                <div class="t-body"><b>Creator vault</b><small>Fees from every trade land here, even before anyone claims them</small></div>
-                <span class="t-amt" data-t-vault>0.000 SOL</span>
-                <a class="t-link" data-t-vault-link href="#" target="_blank" rel="noopener">View ↗</a>
+                <div class="t-body"><b>Creator vault</b><small>Trading fees waiting to be sent on. Not counted yet</small></div>
+                <span class="t-amt" data-t-vault>—</span>
+                <a class="t-link off" data-t-vault-link href="#" target="_blank" rel="noopener">View ↗</a>
               </li>
               <li>
                 <span class="t-step">2</span>
-                <div class="t-body"><b>Donation account</b><small>pump.fun's built-in donation account, on its way to the charity</small></div>
-                <span class="t-amt" data-t-pending>0.000 SOL</span>
-                <a class="t-link" data-t-pending-link href="#" target="_blank" rel="noopener">View ↗</a>
+                <div class="t-body"><b>Converting to USDC</b><small>In the donation pipeline, not settled yet. Not counted yet</small></div>
+                <span class="t-amt" data-t-pending>—</span>
+                <a class="t-link off" data-t-pending-link href="#" target="_blank" rel="noopener">View ↗</a>
               </li>
               <li>
                 <span class="t-step">3</span>
-                <div class="t-body"><b>Delivered to charity</b><small data-t-crank>Waiting for the first delivery</small></div>
-                <span class="t-amt" data-t-sent>0.000 SOL</span>
-                <a class="t-link" href="https://www.donate.gg/charities/feeding-america" target="_blank" rel="noopener">donate.gg ↗</a>
+                <div class="t-body"><b>Settled to Feeding America</b><small data-t-crank>USDC received on-chain. This is what the meals count</small></div>
+                <span class="t-amt" data-t-sent>—</span>
+                <a class="t-link off" data-t-sent-link href="#" target="_blank" rel="noopener">Tx ↗</a>
               </li>
             </ol>
             <p class="lock" data-m-lock hidden></p>
           </div>
           <div class="meter-meta">
-            <p><span>Contract</span><a data-m-ca href="#" target="_blank" rel="noopener">Goes live at launch</a></p>
-            <p><span>Status</span><b data-m-updated>Counter starts at launch</b></p>
-            <p><span>Source</span><a href="https://www.feedingamerica.org/" target="_blank" rel="noopener">Feeding America: every $1 provides 20 meals ↗</a></p>
+            <p><span>Contract</span><a data-m-ca href="#" target="_blank" rel="noopener">—</a></p>
+            <p><span>Status</span><b data-m-updated>Reading settled donations…</b></p>
+            <p><span>What this proves</span><small class="m-note">An estimated meal equivalent using Feeding America's figure of 20 meals per $1. It counts USDC settled on-chain to Feeding America's donate.gg wallet, net of donate.gg's processing fee. It doesn't confirm the bank payout or meals actually served.</small></p>
           </div>
         </div>
       </div>
@@ -606,9 +604,19 @@
     </footer>
   </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+  <!-- If the animation layer fails or stalls, restore a readable page (the meter runs independently). -->
+  <script>
+    window.__fcRescue = function () {
+      document.body.classList.remove('is-loading');
+      document.documentElement.classList.remove('lenis-stopped');
+      var pl = document.querySelector('.preloader'); if (pl) pl.style.display = 'none';
+    };
+    setTimeout(function () { if (!window.__fcBooted) window.__fcRescue(); }, 8000);
+  </script>
+  <script src="meter.js"></script>
+  <script src="assets/vendor/gsap.min.js"></script>
+  <script src="assets/vendor/ScrollTrigger.min.js"></script>
+  <script src="assets/vendor/lenis.min.js"></script>
   <script src="main.js"></script>
 </body>
 </html>

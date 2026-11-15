@@ -335,6 +335,8 @@ button.pill:hover { background: var(--soft); border-color: var(--fg); }
   background: var(--cream); color: var(--red); padding: 8px 12px; border-radius: 99px;
 }
 .lock[hidden] { display: none; }
+.lock { border-radius: 16px; line-height: 1.55; text-transform: none; letter-spacing: .02em; font-size: 12px; }
+.meter-meta small.m-note { font-size: 12.5px; line-height: 1.5; font-weight: 500; color: var(--muted); }
 .meter-meta { display: grid; gap: 14px; align-content: start; font-size: 14px; }
 .meter-meta p { display: grid; gap: 4px; }
 .meter-meta span { font-family: var(--f-mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
