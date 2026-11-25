@@ -16,9 +16,9 @@
 const core = require('./_lib/meter-core');
 const snapshot = require('./_data/settled-snapshot.json');
 
-const SETTLED_TTL = 60 * 1000;   // re-read receipts at most once a minute per instance
-const CHAIN_TTL = 20 * 1000;
-const STALE_AFTER = 5 * 60 * 1000;
+const SETTLED_TTL = 5 * 60 * 1000; // re-read receipts at most every 5 minutes per instance
+const CHAIN_TTL = 2 * 60 * 1000;
+const STALE_AFTER = 20 * 60 * 1000;
 
 const RPC_URLS = (process.env.SOLANA_RPC_URLS || 'https://api.mainnet-beta.solana.com,https://solana-rpc.publicnode.com')
   .split(',').map(s => s.trim()).filter(Boolean);
@@ -115,7 +115,7 @@ module.exports = async function handler(req, res) {
   const body = JSON.stringify(payload());
   res.statusCode = 200;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, max-age=10, s-maxage=30, stale-while-revalidate=120');
+  res.setHeader('Cache-Control', 'public, max-age=240, s-maxage=300, stale-while-revalidate=900');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.end(req.method === 'HEAD' ? undefined : body);
 };

@@ -7,8 +7,13 @@
 (() => {
   'use strict';
   const API = '/api/meter';
-  const REFRESH_MS = 30000;
+  // Settlements land in batches, so a slow refresh loses nothing. Kept low to save Vercel requests:
+  // the meter only fetches while it's on screen and the tab is visible, at most every 5 minutes,
+  // and reuses a reading from the last 4 minutes across page loads.
+  const REFRESH_MS = 5 * 60 * 1000;
+  const REUSE_MS = 4 * 60 * 1000;
   const TIMEOUT_MS = 12000;
+  const CACHE_KEY = 'foodcoin:meter:v2';
 
   const $ = (s, c = document) => c.querySelector(s);
   const card = $('.meter-card');
@@ -156,23 +161,40 @@
   }
   setInterval(updateStatusLine, 15000);
 
-  /* ---------- polling ---------- */
-  let busy = false;
+  /* ---------- polling (frugal) ---------- */
+  let busy = false, lastFetchAt = 0, onScreen = false;
+
+  // reuse a recent reading across page loads (no request)
+  try {
+    const c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+    if (c && c.data && Date.now() - c.at < 24 * 3600 * 1000) {
+      render(c.data);
+      if (Date.now() - c.at < REUSE_MS) lastFetchAt = c.at;
+    }
+  } catch {}
+
   async function load() {
-    if (busy || document.hidden) return;
+    if (busy || document.hidden || !onScreen) return;
+    if (lastFetchAt && Date.now() - lastFetchAt < REFRESH_MS) return;
     busy = true;
     const ctrl = new AbortController(), timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
     try {
       const r = await fetch(API, { signal: ctrl.signal, headers: { Accept: 'application/json' } });
       if (!r.ok) throw new Error('HTTP ' + r.status);
-      render(await r.json());
+      const data = await r.json();
+      lastFetchAt = Date.now();
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ at: lastFetchAt, data })); } catch {}
+      render(data);
     } catch (e) {
+      lastFetchAt = Date.now() - REFRESH_MS + 60 * 1000; // retry in a minute
       if (last) { setLive('is-idle', 'Cached'); updateStatusLine(); }
       else { setLive('is-error', 'Unavailable'); els.updated.textContent = 'Meal meter is unavailable right now. Retrying'; }
     } finally { clearTimeout(timer); busy = false; }
   }
-  load();
-  setInterval(load, REFRESH_MS);
+
+  // only fetch while the meter is (nearly) on screen
+  new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; if (onScreen) load(); }, { rootMargin: '300px 0px' }).observe(card);
+  setInterval(load, 30 * 1000); // cheap check; a request only goes out when one is due
   document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
   addEventListener('online', load);
 })();
