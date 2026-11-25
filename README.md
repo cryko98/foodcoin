@@ -68,6 +68,14 @@ This serves the site and `/api/meter` on http://localhost:5173.
 npm test
 ```
 
+## Caching (keeps Vercel requests low)
+
+`vercel.json` lets browsers keep fonts, vendor libraries, `styles.css`, `main.js` and `meter.js` for a year, and
+images/video for 7 days. **When you change `styles.css`, `main.js`, `meter.js` or `assets/fonts/fonts.css`, bump the
+`?v=` tag on its link in `index.html`** (e.g. `?v=20261125` → today's date), or visitors keep the old file.
+Changing an image? Give it a new filename, or wait up to 7 days. The Meal Meter fetches at most every 5 minutes,
+only while it's on screen.
+
 ## Deploy
 
 Vercel (current host of foodcoin.site): pushing to `main` deploys the static site and the `/api/meter` function.
